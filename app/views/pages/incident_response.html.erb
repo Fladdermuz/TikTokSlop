@@ -1,0 +1,143 @@
+<div class="mx-auto max-w-3xl px-6 py-16">
+  <div class="mb-12">
+    <h1 class="text-3xl font-bold tracking-tight text-gray-900">Incident Response Policy</h1>
+    <p class="mt-2 text-sm text-gray-500">Effective date: April 10, 2026</p>
+    <div class="mt-4 h-px bg-gray-200"></div>
+  </div>
+
+  <div class="space-y-10 text-sm leading-relaxed text-gray-700">
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Purpose</h2>
+      <p>This policy defines how Tikedon identifies, responds to, and recovers from security incidents that may affect the confidentiality, integrity, or availability of our systems and the data we process on behalf of our users.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Scope</h2>
+      <p>This policy applies to all systems, infrastructure, and data managed by Tikedon, including our production application, databases, third-party integrations, and any personal or business data processed through our platform.</p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Roles and responsibilities</h2>
+      <div class="overflow-hidden rounded-lg border border-gray-200">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-900">Role</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-900">Responsibility</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-3 font-medium text-gray-900">Platform Administrator</td>
+              <td class="px-4 py-3">Leads incident response. Responsible for detection, investigation, containment, remediation, and communication with affected parties.</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-gray-900">Shop Administrators</td>
+              <td class="px-4 py-3">Report suspected incidents to the Platform Administrator. Responsible for managing their own account credentials and team access.</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-gray-900">External Partners (TikTok)</td>
+              <td class="px-4 py-3">Notified of any incident that affects data exchanged through the TikTok Shop Partner API, in accordance with TikTok's developer terms.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Incident classification</h2>
+      <div class="overflow-hidden rounded-lg border border-gray-200">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-900">Severity</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-900">Definition</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-900">Response time</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-3 font-medium text-red-700">Critical</td>
+              <td class="px-4 py-3">Confirmed unauthorized access to personal data, OAuth tokens, or production systems.</td>
+              <td class="px-4 py-3">Immediate. Containment within 1 hour.</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-amber-700">High</td>
+              <td class="px-4 py-3">Suspected breach, service outage affecting data integrity, or vulnerability actively being exploited.</td>
+              <td class="px-4 py-3">Within 4 hours.</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-yellow-700">Medium</td>
+              <td class="px-4 py-3">Failed intrusion attempts detected, unusual access patterns, or non-critical vulnerability discovered.</td>
+              <td class="px-4 py-3">Within 24 hours.</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-gray-600">Low</td>
+              <td class="px-4 py-3">Minor policy violation, single failed login attempt, or informational security alert.</td>
+              <td class="px-4 py-3">Next business day.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Response procedure</h2>
+
+      <div class="space-y-4">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">1. Detection and identification</h3>
+          <p class="mt-2">Incidents may be detected through automated intrusion prevention alerts, daily security log analysis, application error monitoring, user reports, or third-party notification. All potential incidents are logged with a timestamp, source, and initial assessment.</p>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">2. Containment</h3>
+          <p class="mt-2">Immediate actions to limit the impact of the incident. This may include revoking compromised credentials, blocking offending IP addresses, disabling affected accounts, rotating API keys, or taking affected services offline.</p>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">3. Investigation</h3>
+          <p class="mt-2">Determine the root cause, scope, and impact of the incident. Review access logs, application logs, firewall logs, and database audit trails to understand what data was affected and how the incident occurred.</p>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">4. Notification</h3>
+          <p class="mt-2">For incidents involving personal data or data exchanged through third-party APIs:</p>
+          <ul class="mt-2 list-disc pl-5 space-y-1">
+            <li>Affected users are notified within 72 hours of confirmed breach.</li>
+            <li>TikTok is notified immediately per their developer terms of service if the incident involves data accessed through their API.</li>
+            <li>Regulatory authorities are notified as required by applicable data protection laws.</li>
+          </ul>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">5. Remediation and recovery</h3>
+          <p class="mt-2">Implement fixes to resolve the vulnerability or issue that caused the incident. Restore affected services from verified backups if necessary. Verify that containment measures are effective and the threat is eliminated before restoring normal operations.</p>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900">6. Post-incident review</h3>
+          <p class="mt-2">Conduct a root cause analysis documenting what happened, how it was detected, what was done, and what will be changed to prevent recurrence. Update security controls, monitoring rules, and this policy as needed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Reporting channels</h2>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <p>To report a security incident or concern:</p>
+        <ul class="mt-3 space-y-2">
+          <li><strong>Email:</strong> <a href="mailto:security@tikedon.com" class="text-indigo-600 hover:text-indigo-500">security@tikedon.com</a></li>
+        </ul>
+        <p class="mt-3">All reports are acknowledged within 24 hours.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Policy review</h2>
+      <p>This policy is reviewed and updated at least annually, or immediately following any significant incident.</p>
+    </section>
+
+  </div>
+</div>

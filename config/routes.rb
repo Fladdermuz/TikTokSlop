@@ -54,8 +54,9 @@ Rails.application.routes.draw do
   end
 
   # Public pages (unauthenticated)
-  get "privacy", to: "pages#privacy"
-  get "terms",   to: "pages#terms"
+  get "privacy",            to: "pages#privacy"
+  get "terms",              to: "pages#terms"
+  get "incident-response",  to: "pages#incident_response"
 
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
