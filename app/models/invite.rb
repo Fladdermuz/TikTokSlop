@@ -1,4 +1,6 @@
 class Invite < ApplicationRecord
+  include ShopScoped
+
   STATUSES = %w[pending sending sent accepted declined expired failed].freeze
 
   belongs_to :creator

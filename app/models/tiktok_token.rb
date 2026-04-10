@@ -1,8 +1,11 @@
 class TiktokToken < ApplicationRecord
+  include ShopScoped
+
   encrypts :access_token
   encrypts :refresh_token
 
-  validates :shop_id, presence: true, uniqueness: true
+  validates :external_shop_id, presence: true
+  validates :shop_id, uniqueness: true
   validates :access_token, :refresh_token, :access_expires_at, :refresh_expires_at, presence: true
 
   scope :active, -> { where("access_expires_at > ?", Time.current) }

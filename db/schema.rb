@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_010337) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_014257) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,9 +23,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_010337) do
     t.text "notes"
     t.string "product_external_id"
     t.boolean "sample_offer", default: false, null: false
+    t.bigint "shop_id", null: false
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_campaigns_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["shop_id"], name: "index_campaigns_on_shop_id"
     t.index ["status"], name: "index_campaigns_on_status"
   end
 
@@ -63,13 +65,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_010337) do
     t.datetime "responded_at"
     t.integer "retry_count", default: 0, null: false
     t.datetime "sent_at"
+    t.bigint "shop_id", null: false
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["campaign_id"], name: "index_invites_on_campaign_id"
     t.index ["creator_id", "campaign_id"], name: "index_invites_on_creator_id_and_campaign_id", unique: true
     t.index ["creator_id"], name: "index_invites_on_creator_id"
     t.index ["external_id"], name: "index_invites_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["shop_id"], name: "index_invites_on_shop_id"
     t.index ["status"], name: "index_invites_on_status"
+  end
+
+  create_table "memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "invited_at"
+    t.datetime "joined_at"
+    t.string "role", default: "member", null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["role"], name: "index_memberships_on_role"
+    t.index ["shop_id"], name: "index_memberships_on_shop_id"
+    t.index ["user_id", "shop_id"], name: "index_memberships_on_user_id_and_shop_id", unique: true
+    t.index ["user_id"], name: "index_memberships_on_user_id"
   end
 
   create_table "samples", force: :cascade do |t|
@@ -80,30 +98,73 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_010337) do
     t.bigint "invite_id", null: false
     t.jsonb "raw", default: {}, null: false
     t.datetime "shipped_at"
+    t.bigint "shop_id", null: false
     t.string "status", default: "requested", null: false
     t.string "tracking_number"
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_samples_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
     t.index ["invite_id"], name: "index_samples_on_invite_id"
+    t.index ["shop_id"], name: "index_samples_on_shop_id"
     t.index ["status"], name: "index_samples_on_status"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "shops", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "plan", default: "free", null: false
+    t.string "slug", null: false
+    t.string "status", default: "active", null: false
+    t.string "timezone", default: "UTC", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_shops_on_slug", unique: true
+    t.index ["status"], name: "index_shops_on_status"
   end
 
   create_table "tiktok_tokens", force: :cascade do |t|
     t.datetime "access_expires_at", null: false
     t.text "access_token", null: false
     t.datetime "created_at", null: false
+    t.string "external_shop_id", null: false
     t.datetime "refresh_expires_at", null: false
     t.text "refresh_token", null: false
     t.text "scopes"
     t.string "seller_name"
     t.string "shop_cipher"
-    t.string "shop_id", null: false
+    t.bigint "shop_id", null: false
     t.string "shop_name"
     t.datetime "updated_at", null: false
+    t.index ["external_shop_id"], name: "index_tiktok_tokens_on_external_shop_id"
     t.index ["shop_id"], name: "index_tiktok_tokens_on_shop_id", unique: true
   end
 
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email_address", null: false
+    t.string "name"
+    t.string "password_digest", null: false
+    t.boolean "platform_admin", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["platform_admin"], name: "index_users_on_platform_admin", where: "(platform_admin = true)"
+  end
+
+  add_foreign_key "campaigns", "shops"
   add_foreign_key "invites", "campaigns"
   add_foreign_key "invites", "creators"
+  add_foreign_key "invites", "shops"
+  add_foreign_key "memberships", "shops"
+  add_foreign_key "memberships", "users"
   add_foreign_key "samples", "invites"
+  add_foreign_key "samples", "shops"
+  add_foreign_key "sessions", "users"
+  add_foreign_key "tiktok_tokens", "shops"
 end

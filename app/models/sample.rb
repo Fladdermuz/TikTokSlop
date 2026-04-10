@@ -1,4 +1,6 @@
 class Sample < ApplicationRecord
+  include ShopScoped
+
   STATUSES = %w[requested approved rejected shipped delivered returned].freeze
 
   belongs_to :invite

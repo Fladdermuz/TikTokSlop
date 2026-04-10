@@ -1,4 +1,6 @@
 class Campaign < ApplicationRecord
+  include ShopScoped
+
   STATUSES = %w[draft active paused ended].freeze
 
   has_many :invites, dependent: :destroy

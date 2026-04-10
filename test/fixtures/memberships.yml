@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  shop: one
+  role: MyString
+  invited_at: 2026-04-09 21:42:12
+  joined_at: 2026-04-09 21:42:12
+
+two:
+  user: two
+  shop: two
+  role: MyString
+  invited_at: 2026-04-09 21:42:12
+  joined_at: 2026-04-09 21:42:12
