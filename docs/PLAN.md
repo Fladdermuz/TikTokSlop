@@ -6,8 +6,10 @@ proper SaaS from day one, deployable for personal use first and for external
 customers later.
 
 **Repo**: `github.com/Fladdermuz/TikTokSlop`
-**Stack**: Rails 8.1 / Ruby 3.3 / Postgres 17 / Hotwire / Tailwind / Solid Queue
-**Target deploy**: `slop.bionox.info` (subdomain on existing bionox server)
+**Stack**: Rails 8.1 / Ruby 3.3.6 / Postgres 17 (dev) / Postgres 16 (prod) / Hotwire / Tailwind / Solid Queue
+**Production domain**: `tikedon.com` (Cloudflare → 146.190.139.89)
+**Server**: `ssh repify` (same physical host as `ssh bionox` — Ubuntu 24.04)
+**Deploy method**: Apache + Phusion Passenger (matches existing Repify.me pattern)
 
 ---
 
@@ -33,6 +35,63 @@ customers later.
 - [Cross-cutting concerns](#cross-cutting-concerns)
 - [Open questions](#open-questions)
 - [Blocker log](#blocker-log)
+
+---
+
+## Server co-tenancy — DO NOT BREAK
+
+The production server (`ssh repify` = `ssh bionox` = `146.190.139.89`) hosts **two other apps** we must not disturb. Read this section before any deploy work.
+
+### Existing apps on this host
+
+| App | Type | Ruby | Web tier | Path | Port | Users |
+|---|---|---|---|---|---|---|
+| **Repify.me** | Rails 7.2.1 | 3.3.6 (RVM) | **Apache + Passenger** | `/var/www/Repify.me` | via Passenger | `prod_user_9988:www-data` |
+| **bionox.info** | Next.js | (N/A) | **Apache ProxyPass → Puma-free** | `/var/www/bionox.info` | localhost:**3001** (PM2) | `prod_user_9988` |
+
+### Environment
+
+- **OS**: Ubuntu 24.04.1 LTS (noble)
+- **Apache**: 2.4.58 with `libapache2-mod-passenger` 6.0.25
+- **Passenger default Ruby**: `/usr/bin/ruby3.2` (Ubuntu system Ruby 3.2.3) — **don't rely on this**, always override `PassengerRuby` per vhost
+- **Ruby 3.3.6**: available via system-wide RVM at `/usr/local/rvm/gems/ruby-3.3.6/wrappers/ruby`
+- **Postgres**: 16, localhost:5432. DBs `repify_dev`, `repify_me`, `repify_prod` — all owned by `prod_user_9988`
+- **Redis**: 6379 localhost (used by Repify.me Sidekiq) — available if we want it but not planned
+- **PM2**: runs under `prod_user_9988` — currently only the `bionox` Next.js process
+- **Deploy user**: `prod_user_9988` owns `/var/www/*` (except Repify.me which is owned by same but has `www-data` group)
+- **Uptime**: 349 days — no reboots without explicit reason
+- **SSH**: root access works via `ssh repify`. Git + SSH keys already set up for deploy.
+
+### Existing Apache vhosts (do not modify)
+
+```
+/etc/apache2/sites-enabled/
+  ├── 000-default.conf              → repify.me (HTTP)
+  ├── 000-default-le-ssl.conf       → repify.me (HTTPS, Let's Encrypt)
+  ├── bionox.info.conf              → bionox.info (HTTP → 127.0.0.1:3001)
+  └── bionox.info-ssl.conf          → bionox.info (HTTPS → 127.0.0.1:3001)
+```
+
+Note: `000-default.conf` is **mis-named** — despite the default-sounding name it's the Repify.me vhost. Don't be tempted to "fix" it.
+
+### What we will add for tikedon.com (and nothing else)
+
+- New directory: `/var/www/tikedon.com` owned `prod_user_9988:www-data`
+- New Postgres DB: `tikedon_production` (owner to be decided — likely `prod_user_9988` for consistency, or a dedicated `tikedon` user for least privilege)
+- New Apache vhosts: `/etc/apache2/sites-available/tikedon.com.conf` + `tikedon.com-ssl.conf`, symlinked into `sites-enabled`
+- New systemd service: `tikedon-jobs.service` for Solid Queue worker (or `pm2` process under `prod_user_9988` — pick one at Phase 12)
+- New Let's Encrypt cert: `certbot --apache -d tikedon.com -d www.tikedon.com` (Cloudflare set to DNS-only on tikedon.com during issuance, or use DNS-01 challenge)
+- `tikedon.com` DNS A record on Cloudflare → `146.190.139.89` (already set)
+
+### What we will NOT do
+
+- Modify Repify.me's vhost, code, database, or RVM gemset
+- Modify bionox.info's vhost, PM2 process, or Next.js build
+- Upgrade Ruby, Apache, Passenger, or Postgres system-wide
+- Restart services that aren't ours
+- Take port 3001 (bionox.info) or Redis 6379 (leave for Repify.me unless explicitly chosen)
+- Run `apt upgrade`, `rvm cleanup`, or anything system-wide without asking
+- Share a Postgres role with Repify.me (new DB, new or existing role, but not a shared DB)
 
 ---
 
@@ -866,72 +925,226 @@ Non-owners can leave. Owner must transfer or delete shop first.
 
 ---
 
-## Phase 12 — Deploy to bionox server
+## Phase 12 — Deploy to repify server as tikedon.com
 
-**Goal**: `slop.bionox.info` is live, SSL, running as a separate PM2 process on the existing bionox server.
+**Goal**: `https://tikedon.com` is live, SSL-secured via Cloudflare + Let's Encrypt, running under Apache + Passenger, co-tenanted with Repify.me and bionox.info without disturbing either.
 
-### 12.1 Production database
-- Create `tiktokslop_production` on bionox Postgres
-- Dedicated DB user with limited permissions
-- Store DATABASE_URL in Rails credentials (production env)
+> **Read [Server co-tenancy](#server-co-tenancy--do-not-break) before starting this phase.** Every command in this phase touches a server with two other live apps. The Repify.me Passenger vhost is the reference pattern — we match it, not replace it.
 
-### 12.2 DNS + SSL
-- Add A record for `slop.bionox.info` → bionox server IP
-- Apache virtual host with Let's Encrypt cert via certbot
-- Reverse proxy to `localhost:3002` (next port after bionox.info's 3001)
+### 12.1 Pre-flight checks (read-only)
+Run before touching anything:
+- [ ] Confirm Ruby 3.3.6 still available at `/usr/local/rvm/gems/ruby-3.3.6/wrappers/ruby`
+- [ ] Confirm Repify.me and bionox.info are both serving (`curl -I https://repify.me`, `curl -I https://bionox.info`)
+- [ ] Confirm Postgres 16 running, `prod_user_9988` role exists
+- [ ] Confirm `/var/www/tikedon.com` does NOT already exist
+- [ ] Confirm no Apache vhost named `tikedon.com*` exists in `sites-available` or `sites-enabled`
 
-### 12.3 Rails production config
-- `RAILS_ENV=production`
-- Asset precompilation (Tailwind + propshaft)
-- `RAILS_MASTER_KEY` securely deployed (not committed)
-- Force SSL, HSTS
-- Session cookie `secure: true`
-
-### 12.4 Process manager
-Two PM2 processes:
-- `tiktokslop-web` — Puma on port 3002
-- `tiktokslop-jobs` — `bin/jobs` (Solid Queue worker)
-
-Both start on boot.
-
-### 12.5 Deploy script
+### 12.2 Create deploy user context and directories
+As root:
 ```bash
-ssh bionox "cd /var/www/slop.bionox.info && \
-  git pull origin main && \
-  bundle install && \
-  RAILS_ENV=production bin/rails db:migrate && \
-  RAILS_ENV=production bin/rails assets:precompile && \
-  pm2 restart tiktokslop-web tiktokslop-jobs"
+sudo -u prod_user_9988 bash -lc "mkdir -p /var/www/tikedon.com"
+chgrp www-data /var/www/tikedon.com
+chmod 2755 /var/www/tikedon.com
 ```
 
-Add to `CLAUDE.md` in this repo so future sessions know how to deploy.
+### 12.3 Production database
+As `postgres` superuser:
+```sql
+CREATE DATABASE tikedon_production OWNER prod_user_9988 ENCODING 'UTF8' LC_COLLATE 'C.UTF-8' LC_CTYPE 'C.UTF-8' TEMPLATE template0;
+```
+(Using `prod_user_9988` as owner for consistency with the other two DBs on the host. If we later want least-privilege, we can reassign — but this is the path of least co-tenant risk.)
 
-### 12.6 First deploy checklist
-- [ ] DB migrated
-- [ ] Assets precompiled
-- [ ] Health check returns 200
-- [ ] Login works
-- [ ] Can create shop, connect TikTok, send one test invite
-- [ ] Solid Queue processing jobs
-- [ ] Logs visible via `pm2 logs`
+Rails will also create Solid Queue / Cache / Cable tables in the same database via separate migration paths (Rails 8 default).
+
+### 12.4 First deploy — clone and build
+As `prod_user_9988`:
+```bash
+cd /var/www/tikedon.com
+git clone git@github.com:Fladdermuz/TikTokSlop.git .
+echo "3.3.6" > .ruby-version  # already committed from dev, just confirm
+source /usr/local/rvm/scripts/rvm
+rvm use 3.3.6
+gem install bundler
+bundle config set --local deployment 'true'
+bundle config set --local without 'development test'
+bundle install
+```
+
+### 12.5 Master key and credentials
+`RAILS_MASTER_KEY` must be on the server but never committed. Options (pick one at deploy time):
+- **Option A**: scp `config/master.key` once from dev to `/var/www/tikedon.com/config/master.key`, chmod 600, chown prod_user_9988
+- **Option B**: store in `/var/www/tikedon.com/.env.production` and source via Passenger env vars
+- **Option C**: use Rails 8 `config/credentials/production.key` with a separate production credentials file (preferred for clean prod/dev split)
+
+Recommend **Option C**: `bin/rails credentials:edit --environment production` locally, commit the `.enc` file, scp only the `.key`.
+
+### 12.6 Environment variables Passenger needs
+In the Apache vhost (see 12.8), set:
+```
+SetEnv RAILS_ENV production
+SetEnv RAILS_MASTER_KEY <from file or kept out of apache config via PassengerEnvVarsFromConfig>
+SetEnv RAILS_LOG_TO_STDOUT 1
+SetEnv RAILS_SERVE_STATIC_FILES 1
+```
+
+Preferred: put secrets in a file `/var/www/tikedon.com/.env.production` readable only by `prod_user_9988`, and use a small wrapper that sources it before Passenger boots. Or use `PassengerAppEnv production` and rely on Rails credentials.
+
+### 12.7 Database setup and asset precompile
+```bash
+cd /var/www/tikedon.com
+RAILS_ENV=production bin/rails db:prepare   # creates if missing, migrates
+RAILS_ENV=production bin/rails db:seed      # creates first platform admin
+RAILS_ENV=production bin/rails assets:precompile
+RAILS_ENV=production bin/rails tailwindcss:build
+```
+
+### 12.8 Apache vhost — HTTP (pre-SSL)
+`/etc/apache2/sites-available/tikedon.com.conf`:
+```apache
+<VirtualHost *:80>
+    ServerName tikedon.com
+    ServerAlias www.tikedon.com
+    DocumentRoot /var/www/tikedon.com/public
+
+    PassengerRuby /usr/local/rvm/gems/ruby-3.3.6/wrappers/ruby
+    PassengerAppRoot /var/www/tikedon.com
+    PassengerAppEnv production
+    PassengerFriendlyErrorPages off
+
+    <Directory /var/www/tikedon.com/public>
+        Options -MultiViews
+        Require all granted
+        AllowOverride None
+    </Directory>
+
+    ErrorLog  ${APACHE_LOG_DIR}/tikedon.com-error.log
+    CustomLog ${APACHE_LOG_DIR}/tikedon.com-access.log combined
+</VirtualHost>
+```
+
+Enable:
+```bash
+a2ensite tikedon.com.conf
+apache2ctl configtest   # MUST pass before reload
+systemctl reload apache2
+```
+
+### 12.9 SSL via Let's Encrypt
+Cloudflare must be **DNS-only** (grey cloud) during issuance, OR use DNS-01 challenge. Prefer DNS-only for simplicity:
+```bash
+certbot --apache -d tikedon.com -d www.tikedon.com --non-interactive --agree-tos -m <email>
+```
+This auto-generates `tikedon.com-le-ssl.conf` in `sites-available` and enables it.
+
+After cert issuance, re-enable Cloudflare proxy (orange cloud) with SSL mode **Full (strict)**.
+
+### 12.10 Solid Queue worker as systemd service
+`/etc/systemd/system/tikedon-jobs.service`:
+```ini
+[Unit]
+Description=TikTokSlop Solid Queue worker
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=prod_user_9988
+Group=www-data
+WorkingDirectory=/var/www/tikedon.com
+Environment=RAILS_ENV=production
+ExecStart=/usr/local/rvm/gems/ruby-3.3.6/wrappers/bundle exec rails solid_queue:start
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/tikedon/jobs.log
+StandardError=append:/var/log/tikedon/jobs.err.log
+
+[Install]
+WantedBy=multi-user.target
+```
+Then:
+```bash
+mkdir -p /var/log/tikedon
+chown prod_user_9988:prod_user_9988 /var/log/tikedon
+systemctl daemon-reload
+systemctl enable --now tikedon-jobs
+systemctl status tikedon-jobs
+```
+
+### 12.11 Deploy script
+`/var/www/tikedon.com/bin/deploy`:
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd /var/www/tikedon.com
+source /usr/local/rvm/scripts/rvm
+rvm use 3.3.6
+git fetch --all
+git reset --hard origin/main
+bundle install --deployment --without development test
+RAILS_ENV=production bin/rails db:migrate
+RAILS_ENV=production bin/rails assets:precompile
+RAILS_ENV=production bin/rails tailwindcss:build
+touch tmp/restart.txt                 # Passenger graceful restart
+systemctl restart tikedon-jobs         # Needs sudoers rule (see 12.12)
+echo "deploy complete: $(git rev-parse --short HEAD)"
+```
+
+Invoked from dev: `ssh repify "/var/www/tikedon.com/bin/deploy"`
+
+### 12.12 Sudoers entry for restart
+Allow `prod_user_9988` to restart only the tikedon-jobs service without password:
+`/etc/sudoers.d/tikedon-jobs`:
+```
+prod_user_9988 ALL=(root) NOPASSWD: /bin/systemctl restart tikedon-jobs, /bin/systemctl status tikedon-jobs
+```
+
+### 12.13 First deploy checklist
+- [ ] Pre-flight checks green (12.1)
+- [ ] Repify.me still serving (`curl -I https://repify.me`)
+- [ ] bionox.info still serving (`curl -I https://bionox.info`)
+- [ ] `/var/www/tikedon.com` exists, owned correctly
+- [ ] `tikedon_production` DB created, migrated, seeded
+- [ ] `assets:precompile` clean
+- [ ] Apache configtest clean
+- [ ] `tikedon.com.conf` enabled (HTTP first)
+- [ ] `curl -I http://tikedon.com` → 200 via Passenger
+- [ ] Let's Encrypt cert issued
+- [ ] `curl -I https://tikedon.com` → 200
+- [ ] Can log in as platform admin
+- [ ] Solid Queue systemd service active and processing jobs
 - [ ] Error tracking receives test event
-- [ ] SSL grade A
-- [ ] Backup runs
+- [ ] Logs writing to `/var/log/tikedon/` and `${APACHE_LOG_DIR}/tikedon.com-*`
+- [ ] **Repify.me and bionox.info STILL serving** (final sanity check)
 
-### 12.7 TikTok app production approval
-- Submit app for production review (separate from sandbox)
+### 12.14 TikTok app production approval
+- Submit app for production review at `partner.tiktokshop.com`
 - Provide TikTok with:
-  - Production redirect URI
+  - Production redirect URI: `https://tikedon.com/tiktok/callback`
   - Demo video of the flow
-  - Privacy policy + ToS URLs
+  - Privacy policy URL: `https://tikedon.com/privacy`
+  - ToS URL: `https://tikedon.com/terms`
 - Wait for approval
 
+### 12.15 Rollback procedure
+If a deploy breaks things:
+```bash
+ssh repify "cd /var/www/tikedon.com && \
+  git reset --hard <previous_sha> && \
+  bundle install --deployment --without development test && \
+  RAILS_ENV=production bin/rails db:rollback  # only if a migration caused it
+  touch tmp/restart.txt && \
+  systemctl restart tikedon-jobs"
+```
+For hard breaks (Passenger won't start), `a2dissite tikedon.com` and reload Apache — this leaves Repify.me and bionox.info untouched.
+
 **Deliverables**
-- Live site at `slop.bionox.info`
-- You can log in and use it end-to-end
+- Live at `https://tikedon.com`
+- Passenger managing web tier under `prod_user_9988`
+- Solid Queue worker as a systemd service
+- Repify.me and bionox.info completely undisturbed
+- Reproducible deploy script
 
 **Dependencies**: All previous phases.
-**Estimated commits**: 4–6.
+**Estimated commits**: 4–6 (plus server-side config files that aren't in the repo).
 
 ---
 
@@ -1014,6 +1227,9 @@ Track blockers as they appear. Update status and resolution.
 |------|---------|--------|------------|
 | 2026-04-09 | TikTok Shop Partner Center app credentials (app_key, app_secret) needed | open | Register at `partner.tiktokshop.com`, create Affiliate app, submit for sandbox approval |
 | 2026-04-09 | Confirmation of active TikTok Shop seller account | open | Required before any OAuth testing |
+| 2026-04-09 | Production domain confirmed as `tikedon.com` (CF → 146.190.139.89 = repify server) | resolved | Plan Phase 12 fully updated for Passenger + tikedon.com. Repify.me and bionox.info co-tenancy documented. |
+| 2026-04-09 | Email provider for Phase 9 (invites, password reset) | open | Decide between Postmark, Resend, Amazon SES before Phase 9 starts |
+| 2026-04-09 | Legal — ToS and privacy policy content for tikedon.com | open | Required for Phase 12 (TikTok production app review) |
 
 ---
 
