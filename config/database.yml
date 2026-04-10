@@ -87,7 +87,7 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    url: <%= ENV["DATABASE_URL"] || "postgres://prod_user_9988@localhost/tikedon_production" %>
+    database: tikedon_production
   cache:
     <<: *primary_production
     migrations_paths: db/cache_migrate
