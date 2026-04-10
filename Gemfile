@@ -67,4 +67,8 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # HTTP recording / stubbing for TikTok API tests
+  gem "vcr", "~> 6.3"
+  gem "webmock", "~> 3.24"
 end
