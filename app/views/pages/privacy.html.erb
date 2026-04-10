@@ -24,10 +24,11 @@
 
   <h2>How we store and protect data</h2>
   <ul>
-    <li>All data is stored in a PostgreSQL database hosted on US-based servers.</li>
-    <li>TikTok OAuth tokens are <strong>encrypted at rest</strong> using Rails 8 ActiveRecord encryption.</li>
-    <li>Passwords are hashed with bcrypt and never stored in plaintext.</li>
-    <li>HTTPS is enforced for all connections.</li>
+    <li>All data is stored on secure US-based servers.</li>
+    <li>TikTok OAuth tokens are <strong>encrypted at rest</strong> using industry-standard AES-256 encryption.</li>
+    <li>Passwords are securely hashed and never stored in plaintext.</li>
+    <li>All connections are encrypted via HTTPS/TLS.</li>
+    <li>Multi-tenant data isolation ensures each shop's data is strictly separated.</li>
   </ul>
 
   <h2>Third-party services</h2>
