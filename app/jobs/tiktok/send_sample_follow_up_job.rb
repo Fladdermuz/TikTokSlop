@@ -50,17 +50,11 @@ class Tiktok::SendSampleFollowUpJob < ApplicationJob
       return
     end
 
-    # For now, follow-ups go through the collaboration messaging endpoint.
-    # When TikTok provides a direct messaging API, swap this.
+    # Send follow-up via TikTok IM messaging (seller.affiliate_messages.write scope).
     begin
-      collab = Tiktok::Resources::AffiliateCollaboration.new(token: token, shop_cipher: token.shop_cipher)
-      collab.create_targeted(
-        creator_id:      creator.external_id,
-        product_id:      product.external_id,
-        commission_rate: campaign.commission_rate,
-        message:         message,
-        sample_offer:    false
-      )
+      messaging = Tiktok::Resources::Message.new(token: token, shop_cipher: token.shop_cipher)
+      conversation_id = messaging.create_conversation(creator_id: creator.external_id)
+      messaging.send_message(conversation_id: conversation_id, content: message)
       limiter.record!
     rescue Tiktok::Error => e
       Rails.logger.warn("[follow-up] TikTok error for sample=#{sample.id}: #{e.message}")

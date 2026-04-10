@@ -15,8 +15,13 @@ class Tiktok::SyncSampleStatusJob < ApplicationJob
 
     api = Tiktok::Resources::AffiliateSample.new(token: token, shop_cipher: token.shop_cipher)
 
+    # Use the search endpoint to fetch all open sample applications at once,
+    # then match by external_id. This is more efficient than per-sample lookups
+    # and matches the real TikTok API (search-based, not find-by-ID).
+    remote_samples = fetch_remote_samples(api, open_samples)
+
     open_samples.find_each do |sample|
-      sync_one(sample, api)
+      sync_one(sample, remote_samples[sample.external_id])
     rescue Tiktok::Error => e
       Rails.logger.warn("[sync sample] error for sample=#{sample.id}: #{e.message}")
     end
@@ -24,11 +29,32 @@ class Tiktok::SyncSampleStatusJob < ApplicationJob
 
   private
 
-  def sync_one(sample, api)
-    return if sample.external_id.blank?
+  def fetch_remote_samples(api, open_samples)
+    # Search sample applications via the real API and index by ID
+    result = {}
+    page_token = nil
 
-    response = api.find(sample.external_id)
-    data = response.is_a?(Hash) ? response["data"] || response : response
+    loop do
+      response = api.search(filters: { page_size: 50, page_token: page_token })
+      applications = Array(response.dig("data", "sample_applications"))
+      applications.each do |app|
+        id = app["sample_application_id"] || app["id"]
+        result[id.to_s] = app if id
+      end
+
+      page_token = response.dig("data", "next_page_token")
+      break if page_token.blank? || applications.empty?
+    end
+
+    result
+  rescue Tiktok::Error => e
+    Rails.logger.warn("[sync sample] error fetching remote samples: #{e.message}")
+    {}
+  end
+
+  def sync_one(sample, data)
+    return if sample.external_id.blank?
+    return if data.nil?
 
     remote_status = data["status"]&.downcase
     return if remote_status.blank?
