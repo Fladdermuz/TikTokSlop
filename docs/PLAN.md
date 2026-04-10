@@ -182,7 +182,9 @@ Note: `000-default.conf` is **mis-named** — despite the default-sounding name 
 | 2 | TikTok Shop API client | ⏸ pending |
 | 3 | OAuth flow (per-shop) | ⏸ pending (blocked on TikTok app approval) |
 | 4 | Creator discovery | ⏸ pending |
+| 4.5 | Message moderation pipeline (banned-keyword + AI) | ⏸ pending |
 | 5 | Campaign management | ⏸ pending |
+| 5.5 | Product knowledge base + AI message crafter | ⏸ pending |
 | 6 | Bulk invite engine | ⏸ pending |
 | 7 | Sample fulfillment | ⏸ pending |
 | 8 | Performance & analytics | ⏸ pending |
@@ -610,6 +612,99 @@ Appears when any creator is selected:
 
 ---
 
+## Phase 4.5 — Message moderation pipeline
+
+**Goal**: Stop messages from getting silently dropped by TikTok's unwritten content rules. Every outbound message — template *and* personalized variant — passes through a moderation gate that combines a fast curated keyword scanner with an AI semantic check. When TikTok rejects a message anyway, capture their error and run an AI post-mortem so the user knows *why*.
+
+> **Why this matters**: Reacher and similar tools bulk-send messages and silently fail when TikTok's content moderation kicks in. The user (the seller) sees "0 responses" and assumes creators are ignoring them, when actually 60% of their messages were never delivered. We will not let that happen.
+
+### 4.5.1 Curated banned-keyword list
+Static, hand-maintained YAML at `config/tiktok_banned_keywords.yml`. Categories with notes:
+
+- **Income/financial claims** — guaranteed earnings, "make money", percentages, dollar signs
+- **Health/medical claims** — "FDA approved", "cure", "miracle", weight loss
+- **External platform redirection** — WhatsApp, Telegram, Discord, Signal, "DM me", URLs
+- **Contact info exchange** — phone numbers, emails, "call me", "reach me at"
+- **Spam markers** — ALL CAPS clauses, excessive emojis (≥4 in a row), "act now", "limited time"
+- **Trademarks/competitors** — Amazon, Shopify, Walmart (configurable per-shop)
+- **Politics/religion** — divisive topics
+- **Adult/dating/drugs/weapons** — broadly disallowed
+
+The list will start small (~50 phrases) and grow as we observe real failures. Per-shop overrides allowed (e.g., a beauty brand may legitimately use "skincare results").
+
+### 4.5.2 `Moderation::KeywordScanner`
+Pure-function service. Takes a message string and a shop (for per-shop overrides), returns flagged phrases with category + confidence. Sub-millisecond, no API calls. Used as the first line of defense.
+
+### 4.5.3 `Moderation::AiScanner` (Claude API)
+Calls the Claude API with a focused system prompt: "You are a content moderation assistant for TikTok Shop affiliate outreach messages. Identify any phrases or claims that TikTok is likely to flag, even if they're not in a banned word list. Return JSON: {risk: 'low'|'medium'|'high', issues: [{phrase, reason, severity}], suggested_rewrite: optional}".
+
+- Model: `claude-haiku-4-5` for speed/cost (~$0.001 per message, sub-second)
+- Caching: hash the message text → cache result for 24h (Solid Cache) so re-scanning the same template is free
+- Per-shop rate limiting via `Tiktok::RateLimiter` pattern (new bucket: `:moderation_ai`)
+
+### 4.5.4 `Moderation::Result` value object
+```ruby
+Moderation::Result = Data.define(
+  :risk,           # :low | :medium | :high | :blocked
+  :issues,         # array of { phrase, category, reason, severity, source: :keyword|:ai }
+  :suggested_rewrite,  # string or nil
+  :scanned_at,
+  :scanner_versions    # so old results can be invalidated when we update rules
+)
+```
+
+### 4.5.5 `Moderation::Scanner` orchestrator
+Runs `KeywordScanner` first (cheap). If it returns `:high` or `:blocked`, return immediately without calling AI. Otherwise, layer the AI scanner on top and merge results. Total worst-case latency: 1–2 seconds.
+
+### 4.5.6 Persistence: ModerationCheck records
+```
+moderation_checks
+  shop:references
+  checkable:references {polymorphic}  # Campaign template OR Invite final message
+  checked_text:text
+  risk:string                          # low/medium/high/blocked
+  issues:jsonb                         # full array
+  suggested_rewrite:text
+  scanner_versions:jsonb
+  created_at
+```
+Indexed by `(checkable_type, checkable_id)` for fast lookup of "latest check".
+
+### 4.5.7 Pre-send hook in BulkInviteJob (Phase 6 dependency)
+The send pipeline calls `Moderation::Scanner.scan(message, shop:)` immediately before hitting TikTok. If risk is `:blocked`, the invite is marked `failed` with `error_message: "Blocked by Tikedon moderation: <reason>"` and **no API call is made**. Saves an API call and avoids account warnings.
+
+### 4.5.8 Pre-send UI in campaign editor (Phase 5 dependency)
+- Live moderation as the user types (debounced 500ms, keyword scanner only — instant)
+- "Run AI check" button for the deeper scan
+- Inline highlights on flagged phrases with explanation tooltip
+- "Apply suggested rewrite" button if AI provided one
+- Saving a template with `:high` risk requires explicit confirm
+
+### 4.5.9 Post-failure analyzer
+When `BulkInviteJob` catches a `Tiktok::ValidationError` from a send:
+1. Capture TikTok's `code`, `message`, `request_id` on the Invite
+2. Enqueue `Moderation::AnalyzeFailureJob`
+3. The job sends the original message + TikTok's error to Claude for explanation: "Why did TikTok reject this message? What specifically should the user change?"
+4. Result stored on the Invite as `failure_analysis` (jsonb)
+5. Surfaced in the invite detail page with a "Rewrite and retry" button
+
+### 4.5.10 Tests
+- `KeywordScanner`: known-bad and known-good fixtures, per-shop override behavior
+- `AiScanner`: stubbed Claude responses (no real API calls in tests)
+- `Scanner`: short-circuit when keyword scanner returns blocked
+- Persistence: ModerationCheck creation, polymorphic association, latest-check lookup
+
+**Deliverables**
+- Every message that reaches TikTok has been scanned
+- Hard-blocked messages never reach the API
+- Failed sends include an AI-generated explanation
+- User can iterate on templates with confidence
+
+**Dependencies**: Phase 1 (auth/shops), Phase 2 (rate limiter pattern), Claude API key.
+**Estimated commits**: 8–12.
+
+---
+
 ## Phase 5 — Campaign management
 
 **Goal**: A shop admin creates an affiliate campaign tied to a product, with commission rate, sample offer, and message template. This is the container for invites.
@@ -665,6 +760,142 @@ products
 
 **Dependencies**: Phase 1, Phase 2.
 **Estimated commits**: 6–10.
+
+---
+
+## Phase 5.5 — Product knowledge base + AI message crafter
+
+**Goal**: Stop sending generic "love your content!" messages. For each TikTok Shop product, store rich structured info (ingredients, claims, target audience, USPs) and use it to generate genuinely product-specific outreach that references what the creator could *actually say* about the product on camera.
+
+> **Why this matters**: Bulk outreach with generic templates gets ignored. Outreach that references the *specific* product the creator would receive — its unique angle, who it's for, what makes it different — gets responses. Sellers know their products; the system needs to know them too.
+
+### 5.5.1 ProductKnowledge schema
+Extends the `Product` model added in Phase 5 with a one-to-one ProductKnowledge:
+
+```
+product_knowledges
+  product:references {unique}
+  short_description:text         # one-sentence product summary
+  long_description:text          # paragraph, used as primary AI input
+  ingredients:text               # raw text — supplements/cosmetics use case
+  benefits:text                  # bullet-form claims
+  target_audience:text           # who it's for
+  use_cases:text                 # how/when it's used
+  usp:text                       # unique selling proposition
+  certifications:string[]        # FDA, USDA Organic, vegan, gluten-free, etc.
+  brand_name:string
+  brand_voice:text               # tone guidelines (e.g. "friendly, scientific, never hyped")
+  retail_price_cents:bigint
+  size_or_serving:string         # "60 capsules", "200ml", etc.
+  warnings:text                  # allergens, contraindications
+  source_urls:string[]           # where info was imported from (label PDF, brand page)
+  imported_at:datetime
+  imported_by:references {user}
+  raw_imports:jsonb              # original source data for re-extraction
+```
+
+### 5.5.2 Import mechanisms
+Multiple ways to populate ProductKnowledge:
+
+1. **Manual form** — sectioned editor in `/shop/products/:id/knowledge`
+2. **CSV bulk import** — for sellers with 50+ SKUs
+3. **URL fetch + AI extraction** — paste a Shopify product URL, an Amazon listing URL, or a brand page URL → background job fetches the page, sends to Claude with prompt "Extract product info into this JSON schema", saves result as draft for review
+4. **Image OCR** (later) — paste a product label photo → vision model extracts ingredients
+5. **TikTok product page sync** — Phase 5's `Tiktok::SyncProductsJob` already fetches basic product data from TikTok; this layer enriches it
+
+Imports always go through review before becoming canonical — never blindly accept AI-extracted data.
+
+### 5.5.3 `Ai::Client` (new shared service)
+Thin wrapper around the Anthropic Ruby SDK. Single entry point for all AI calls in the app (moderation, message crafting, post-failure analysis, future features).
+- API key in Rails credentials (`anthropic.api_key`)
+- Configurable model per call site (default `claude-haiku-4-5` for cheap/fast, `claude-sonnet-4-6` for nuanced work)
+- Built-in retry/timeout
+- Logs token usage per call for cost tracking
+- Per-shop rate limit bucket (`:ai_calls`) to prevent runaway
+
+### 5.5.4 `Messaging::Crafter` service
+Generates outreach messages from a structured prompt:
+
+```ruby
+Messaging::Crafter.call(
+  campaign:          campaign,    # contains product, commission_rate, sample_offer, etc.
+  creator:           creator,     # TikTok handle, follower_count, niche if known
+  product_knowledge: pk,          # the rich structured data
+  variant:           :template,   # :template (one-to-many) | :personalized (per-creator)
+  tone:              "friendly",  # or pulls from product.brand_voice
+  max_length:        500
+)
+# returns Messaging::Result.new(text:, moderation_result:, ai_metadata:)
+```
+
+The crafter:
+1. Builds a structured prompt with product info, creator context, campaign goals
+2. Calls Claude
+3. **Pipes the output through `Moderation::Scanner` automatically** before returning
+4. If moderation flags it, retries up to 2x with "rewrite to avoid these phrases: [...]" instructions
+5. Returns the final message + moderation result
+
+### 5.5.5 Two crafting modes
+**Template mode** (cheap, called once per campaign):
+- Generates a base template with `{{creator.handle}}` and `{{creator.display_name}}` variables
+- One Claude call per campaign
+- Stored on `Campaign.message_template`
+- Variables substituted at send time without further AI calls
+
+**Personalized mode** (expensive, called per creator at send time):
+- Per-invite call to Claude with the *specific* creator's data
+- Adds 1-3 sentences referencing their niche, follower size, content style
+- Costs ~$0.005-0.01 per invite vs ~$0.0001 for template mode
+- Optional toggle on Campaign: `personalize_per_creator: boolean`
+- Uses `Tiktok::RateLimiter` bucket `:ai_personalize` to cap spend (default: 200/day per shop)
+
+### 5.5.6 Caching
+- Template mode: cache result keyed by `(product_id, campaign_settings_hash, brand_voice_hash)` → never re-generate the same template
+- Personalized mode: cache by `(template_hash, creator_id)` → if you re-run a campaign for the same creators, no re-spend
+
+### 5.5.7 Campaign editor integration (Phase 5 update)
+- "Generate from product" button next to message template field
+- Modal: select tone, length, optional special instructions ("emphasize the vegan certification", "mention the 30-day money-back guarantee")
+- Click → spinner → result populates the editor → user can edit
+- "Run AI check" calls `Moderation::Scanner` independently
+
+### 5.5.8 Bulk invite integration (Phase 6 update)
+- BulkInviteJob respects `campaign.personalize_per_creator`
+- If true: each `SendInviteJob` calls `Messaging::Crafter` for that specific creator
+- If false: uses the saved template with variable substitution
+- Either way, the final message is moderation-scanned before sending (Phase 4.5 hook)
+
+### 5.5.9 Cost tracking
+Add `ai_usage_logs` table:
+```
+ai_usage_logs
+  shop:references
+  feature:string                 # "moderation" | "crafter_template" | "crafter_personalized" | "failure_analysis"
+  model:string
+  input_tokens:integer
+  output_tokens:integer
+  cost_cents:integer
+  request_id:string
+  created_at
+```
+Aggregate daily for the admin dashboard. Per-shop monthly cap configurable.
+
+### 5.5.10 Tests
+- `Ai::Client` with stubbed Anthropic responses
+- `Messaging::Crafter` template mode and personalized mode with stubbed AI
+- Crafter retries when moderation blocks the AI's output
+- ProductKnowledge import (URL → extracted JSON) with stubbed Claude
+- Cost log creation per call
+
+**Deliverables**
+- Per-product knowledge base with multiple import mechanisms
+- AI-crafted message templates that reference specific product attributes
+- Optional per-creator personalization at send time
+- Every crafted message moderation-scanned before sending
+- Per-shop AI cost tracking
+
+**Dependencies**: Phase 4.5 (moderation), Phase 5 (Campaign + Product), Anthropic API key.
+**Estimated commits**: 12–18.
 
 ---
 
@@ -1230,6 +1461,9 @@ Track blockers as they appear. Update status and resolution.
 | 2026-04-09 | Production domain confirmed as `tikedon.com` (CF → 146.190.139.89 = repify server) | resolved | Plan Phase 12 fully updated for Passenger + tikedon.com. Repify.me and bionox.info co-tenancy documented. |
 | 2026-04-09 | Email provider for Phase 9 (invites, password reset) | open | Decide between Postmark, Resend, Amazon SES before Phase 9 starts |
 | 2026-04-09 | Legal — ToS and privacy policy content for tikedon.com | open | Required for Phase 12 (TikTok production app review) |
+| 2026-04-09 | Anthropic Claude API key for moderation + message crafting | open | Required for Phases 4.5 and 5.5. Defaulting to Claude API (Anthropic) since we're already in that ecosystem; if Matt prefers OpenAI we can swap. |
+| 2026-04-09 | New requirement: pre-send moderation pipeline | resolved | Added as Phase 4.5 — keyword scanner + AI scanner + post-failure analyzer. Sits before Phase 5/6 in dependency order. |
+| 2026-04-09 | New requirement: per-product knowledge base + AI message crafter | resolved | Added as Phase 5.5 — ProductKnowledge schema, multiple import paths (manual, CSV, URL+AI extraction), Messaging::Crafter with template + per-creator personalized modes, cost tracking. |
 
 ---
 
