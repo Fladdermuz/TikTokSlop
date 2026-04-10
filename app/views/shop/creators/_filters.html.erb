@@ -2,12 +2,12 @@
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <div>
       <label class="block text-xs font-medium text-gray-600">Min GMV ($)</label>
-      <%= f.number_field :min_gmv_dollars, value: params[:min_gmv_dollars], step: 100, min: 0, placeholder: "0",
+      <%= f.number_field :min_gmv_dollars, value: params[:min_gmv_dollars], step: "any", placeholder: "0",
             class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600">Max GMV ($)</label>
-      <%= f.number_field :max_gmv_dollars, value: params[:max_gmv_dollars], step: 100, min: 0, placeholder: "—",
+      <%= f.number_field :max_gmv_dollars, value: params[:max_gmv_dollars], step: "any", placeholder: "—",
             class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
@@ -30,12 +30,12 @@
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600">Min followers</label>
-      <%= f.number_field :min_followers, value: params[:min_followers], step: 1000, min: 0, placeholder: "0",
+      <%= f.number_field :min_followers, value: params[:min_followers], step: "any", placeholder: "0",
             class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600">Max followers</label>
-      <%= f.number_field :max_followers, value: params[:max_followers], step: 1000, min: 0, placeholder: "—",
+      <%= f.number_field :max_followers, value: params[:max_followers], step: "any", placeholder: "—",
             class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
     </div>
     <div>
