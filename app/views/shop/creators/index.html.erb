@@ -1,0 +1,83 @@
+<div class="space-y-6" data-controller="bulk-select">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Creators</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        Search and filter the affiliate creator pool. <%= number_with_delimiter(@total_count) %> matching creators<% unless Current.shop.tiktok_connected? %> <span class="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">cached</span><% end %>.
+      </p>
+    </div>
+  </div>
+
+  <%= render "filters" %>
+
+  <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-4 py-3 w-10">
+            <input type="checkbox"
+                   data-bulk-select-target="selectAll"
+                   data-action="bulk-select#toggleAll"
+                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+          </th>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Creator</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">GMV (30d)</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Followers</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Engagement</th>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Categories</th>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Country</th>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @creators.each do |creator| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <input type="checkbox"
+                     value="<%= creator.id %>"
+                     data-bulk-select-target="row"
+                     data-action="bulk-select#toggleRow"
+                     class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <% if creator.avatar_url.present? %>
+                  <img src="<%= creator.avatar_url %>" alt="" class="h-9 w-9 rounded-full bg-gray-100">
+                <% end %>
+                <div>
+                  <%= link_to creator.display_name || creator.handle, shop_creator_path(creator), class: "font-medium text-gray-900 hover:text-indigo-600" %>
+                  <div class="text-xs text-gray-500">@<%= creator.handle %></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-right tabular-nums">$<%= number_with_delimiter(creator.gmv_dollars.to_i) %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= number_with_delimiter(creator.follower_count) %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= number_to_percentage((creator.engagement_rate || 0) * 100, precision: 1) %></td>
+            <td class="px-4 py-3">
+              <% Array(creator.categories).each do |cat| %>
+                <span class="inline-block rounded bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"><%= cat %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-gray-500"><%= creator.country %></td>
+            <td class="px-4 py-3">
+              <% if @invited_creator_ids.include?(creator.id) %>
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">Invited</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @creators.empty? %>
+          <tr>
+            <td colspan="8" class="px-4 py-12 text-center text-gray-500">
+              No creators match those filters. Try widening your range.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "pagination", filters: @filters, total_count: @total_count %>
+
+  <%= render "bulk_action_bar" %>
+</div>

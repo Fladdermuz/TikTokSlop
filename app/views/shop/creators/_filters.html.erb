@@ -1,0 +1,61 @@
+<%= form_with url: shop_creators_path, method: :get, class: "rounded-lg border border-gray-200 bg-white p-4" do |f| %>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Min GMV ($)</label>
+      <%= f.number_field :min_gmv_dollars, value: params[:min_gmv_dollars], step: 100, min: 0, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Max GMV ($)</label>
+      <%= f.number_field :max_gmv_dollars, value: params[:max_gmv_dollars], step: 100, min: 0, placeholder: "—",
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">GMV tier</label>
+      <%= f.select :gmv_tier, options_for_select([
+            ["Any tier", ""],
+            ["Under $10k",  "under_10k"],
+            ["$10k–$100k",  "10k_100k"],
+            ["$100k–$500k", "100k_500k"],
+            ["$500k+",      "500k_plus"]
+          ], params[:gmv_tier]),
+          {}, class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Country</label>
+      <%= f.select :country, options_for_select([
+            ["Any", ""], ["US", "US"], ["CA", "CA"], ["UK", "UK"], ["AU", "AU"]
+          ], params[:country]),
+          {}, class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Min followers</label>
+      <%= f.number_field :min_followers, value: params[:min_followers], step: 1000, min: 0, placeholder: "0",
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Max followers</label>
+      <%= f.number_field :max_followers, value: params[:max_followers], step: 1000, min: 0, placeholder: "—",
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Keyword</label>
+      <%= f.text_field :keyword, value: params[:keyword], placeholder: "handle or name",
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600">Sort by</label>
+      <%= f.select :sort, options_for_select([
+            ["GMV (high to low)",        "gmv_desc"],
+            ["GMV (low to high)",        "gmv_asc"],
+            ["Followers (high to low)",  "followers_desc"],
+            ["Engagement (high to low)", "engagement_desc"]
+          ], params[:sort] || "gmv_desc"),
+          {}, class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+  </div>
+  <div class="mt-4 flex items-center justify-end gap-2">
+    <%= link_to "Reset", shop_creators_path, class: "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    <%= f.submit "Search", class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 cursor-pointer" %>
+  </div>
+<% end %>

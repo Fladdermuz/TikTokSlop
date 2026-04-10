@@ -24,6 +24,9 @@ gem "bcrypt", "~> 3.1.7"
 gem "faraday", "~> 2.9"
 gem "faraday-retry", "~> 2.2"
 
+# Standard library that's leaving the default gems in Ruby 3.4
+gem "csv"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

@@ -1,0 +1,17 @@
+<%
+  total_pages = (total_count.to_f / filters.per_page).ceil
+  current_page = filters.page
+%>
+<% if total_pages > 1 %>
+  <div class="flex items-center justify-between text-sm text-gray-600">
+    <span>Page <%= current_page %> of <%= total_pages %></span>
+    <div class="flex gap-2">
+      <% if current_page > 1 %>
+        <%= link_to "← Prev", url_for(request.query_parameters.merge(page: current_page - 1)), class: "rounded-md border border-gray-300 bg-white px-3 py-2 hover:bg-gray-50" %>
+      <% end %>
+      <% if current_page < total_pages %>
+        <%= link_to "Next →", url_for(request.query_parameters.merge(page: current_page + 1)), class: "rounded-md border border-gray-300 bg-white px-3 py-2 hover:bg-gray-50" %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

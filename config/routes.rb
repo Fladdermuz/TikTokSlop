@@ -13,7 +13,11 @@ Rails.application.routes.draw do
   # Everything below operates under Current.shop set by the ShopContext concern.
   namespace :shop do
     resource :dashboard, only: :show
-    resources :creators,    only: %i[index show]
+    resources :creators, only: %i[index show] do
+      collection do
+        post :export
+      end
+    end
     resources :campaigns
     resources :invites,     only: %i[index show]
     resources :samples,     only: %i[index show]

@@ -1,0 +1,14 @@
+<div class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-20" data-bulk-select-target="bar">
+  <div class="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-5 py-3 shadow-lg">
+    <span class="text-sm font-medium text-gray-700">
+      <span data-bulk-select-target="count">0</span> selected
+    </span>
+    <div class="h-5 w-px bg-gray-200"></div>
+    <%= form_with url: export_shop_creators_path, method: :post, data: { bulk_select_target: "form" }, local: true, class: "contents" do |f| %>
+      <%= f.submit "Export CSV", class: "rounded-full bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 cursor-pointer" %>
+    <% end %>
+    <button type="button" data-action="bulk-select#clear" class="rounded-full px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">
+      Clear
+    </button>
+  </div>
+</div>
