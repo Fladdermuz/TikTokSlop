@@ -4,38 +4,93 @@
     <p class="mt-1 text-sm text-gray-500">Welcome back, <%= Current.user.display_name %>.</p>
   </div>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">TikTok connection</div>
-      <div class="mt-2 text-lg font-semibold text-gray-900">
-        <% if Current.shop.tiktok_connected? %>
-          <span class="text-emerald-600">Connected</span>
-        <% else %>
-          <span class="text-amber-600">Not connected</span>
-        <% end %>
+  <%# Stat cards %>
+  <%
+    invites_scope = Current.shop.invites
+    samples_scope = Current.shop.samples
+    campaigns_scope = Current.shop.campaigns
+
+    stats = {
+      "TikTok"         => Current.shop.tiktok_connected? ? "Connected" : "Not connected",
+      "Active campaigns" => campaigns_scope.where(status: "active").count,
+      "Invites sent"    => invites_scope.where.not(sent_at: nil).count,
+      "Accepted"        => invites_scope.where(status: "accepted").count,
+      "Samples shipped" => samples_scope.where(status: %w[shipped delivered follow_up_sent spark_code_received]).count,
+      "Spark codes"     => samples_scope.where(status: "spark_code_received").count
+    }
+
+    total_sent = invites_scope.where.not(sent_at: nil).count.to_f
+    acceptance_rate = total_sent > 0 ? (invites_scope.where(status: "accepted").count / total_sent * 100).round(1) : 0
+  %>
+
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <% stats.each do |label, value| %>
+      <div class="rounded-lg border border-gray-200 bg-white p-4">
+        <div class="text-xs font-medium uppercase tracking-wide text-gray-500"><%= label %></div>
+        <div class="mt-1 text-lg font-semibold text-gray-900"><%= value %></div>
       </div>
-    </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Active campaigns</div>
-      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.campaigns.where(status: "active").count %></div>
-    </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Invites sent</div>
-      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.invites.where.not(sent_at: nil).count %></div>
-    </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Samples shipped</div>
-      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.samples.where(status: %w[shipped delivered]).count %></div>
-    </div>
+    <% end %>
   </div>
 
+  <%# Acceptance rate highlight %>
+  <% if total_sent > 0 %>
+    <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm font-medium text-indigo-900">Acceptance rate</div>
+          <div class="mt-1 text-3xl font-bold text-indigo-700"><%= acceptance_rate %>%</div>
+        </div>
+        <div class="text-right text-sm text-indigo-700">
+          <div><%= invites_scope.where(status: "accepted").count %> accepted / <%= total_sent.to_i %> sent</div>
+          <div class="mt-1"><%= invites_scope.where(status: "failed").count %> failed · <%= invites_scope.where(status: "declined").count %> declined</div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# AI cost summary %>
+  <%
+    ai_cost_30d = AiUsageLog.cross_tenant.where(shop: Current.shop).where("created_at >= ?", 30.days.ago).sum(:cost_cents)
+    ai_calls_30d = AiUsageLog.cross_tenant.where(shop: Current.shop).where("created_at >= ?", 30.days.ago).count
+  %>
+  <% if ai_calls_30d > 0 %>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">AI usage (30 days)</div>
+      <div class="mt-1 text-sm text-gray-700"><%= ai_calls_30d %> calls · $<%= format("%.2f", ai_cost_30d / 100.0) %> estimated cost</div>
+    </div>
+  <% end %>
+
+  <%# TikTok connection callout %>
   <% unless Current.shop.tiktok_connected? %>
     <div class="rounded-lg border border-amber-200 bg-amber-50 p-6">
       <h2 class="text-base font-semibold text-amber-900">Connect your TikTok Shop</h2>
-      <p class="mt-1 text-sm text-amber-800">You need to authorize Tikedon with your TikTok Shop seller account before you can search creators or send invites.</p>
+      <p class="mt-1 text-sm text-amber-800">Authorize Tikedon with your TikTok Shop seller account to start searching creators and sending invites.</p>
       <div class="mt-4">
         <%= link_to "Connect TikTok Shop", shop_tiktok_connection_path, class: "inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500" %>
       </div>
+    </div>
+  <% end %>
+
+  <%# Recent invites %>
+  <% recent_invites = Current.shop.invites.includes(:creator, :campaign).order(created_at: :desc).limit(10) %>
+  <% if recent_invites.any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Recent activity</h2>
+      <ul class="mt-3 divide-y divide-gray-100 text-sm">
+        <% recent_invites.each do |inv| %>
+          <li class="flex items-center justify-between py-2">
+            <div>
+              <%= link_to "@#{inv.creator.handle}", shop_invite_path(inv), class: "text-gray-900 hover:text-indigo-600" %>
+              <span class="text-gray-500">← <%= inv.campaign.name %></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <% colors = { "pending" => "text-gray-500", "sent" => "text-indigo-600", "accepted" => "text-emerald-600", "declined" => "text-red-600", "failed" => "text-red-600" } %>
+              <span class="text-xs <%= colors[inv.status] || 'text-gray-500' %>"><%= inv.status %></span>
+              <span class="text-xs text-gray-400"><%= time_ago_in_words(inv.created_at) %> ago</span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
     </div>
   <% end %>
 </div>

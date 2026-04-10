@@ -27,5 +27,11 @@
       <%= render "layouts/flash" %>
       <%= yield %>
     </main>
+
+    <footer class="border-t border-gray-200 py-6 text-center text-xs text-gray-400">
+      Tikedon &copy; <%= Date.current.year %> &middot;
+      <%= link_to "Privacy", privacy_path, class: "hover:text-gray-600" %> &middot;
+      <%= link_to "Terms", terms_path, class: "hover:text-gray-600" %>
+    </footer>
   </body>
 </html>

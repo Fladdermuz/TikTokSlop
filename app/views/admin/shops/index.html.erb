@@ -1,0 +1,21 @@
+<div class="space-y-6">
+  <h1 class="text-2xl font-semibold text-gray-900">All shops</h1>
+  <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+        <tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Slug</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Members</th><th class="px-4 py-3">Created</th></tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @shops.each do |shop| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3"><%= link_to shop.name, admin_shop_path(shop), class: "font-medium text-gray-900 hover:text-indigo-600" %></td>
+            <td class="px-4 py-3 text-gray-500"><%= shop.slug %></td>
+            <td class="px-4 py-3 capitalize"><%= shop.status %></td>
+            <td class="px-4 py-3"><%= shop.memberships.size %></td>
+            <td class="px-4 py-3 text-gray-500"><%= shop.created_at.strftime("%b %-d, %Y") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

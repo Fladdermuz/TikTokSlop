@@ -53,6 +53,10 @@ Rails.application.routes.draw do
     resources :users
   end
 
+  # Public pages (unauthenticated)
+  get "privacy", to: "pages#privacy"
+  get "terms",   to: "pages#terms"
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end

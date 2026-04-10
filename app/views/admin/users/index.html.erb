@@ -1,0 +1,21 @@
+<div class="space-y-6">
+  <h1 class="text-2xl font-semibold text-gray-900">All users</h1>
+  <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+        <tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Email</th><th class="px-4 py-3">Admin</th><th class="px-4 py-3">Shops</th><th class="px-4 py-3">Created</th></tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @users.each do |user| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3"><%= link_to user.display_name, admin_user_path(user), class: "font-medium text-gray-900 hover:text-indigo-600" %></td>
+            <td class="px-4 py-3 text-gray-500"><%= user.email_address %></td>
+            <td class="px-4 py-3"><%= user.platform_admin? ? "Yes" : "—" %></td>
+            <td class="px-4 py-3"><%= user.memberships.size %></td>
+            <td class="px-4 py-3 text-gray-500"><%= user.created_at.strftime("%b %-d, %Y") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
