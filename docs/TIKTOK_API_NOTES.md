@@ -153,8 +153,67 @@ TikTok publishes per-app and per-shop rate limits per endpoint. Headers returned
 
 Per-shop affiliate endpoints are typically 10–20 requests/second. Conservative starting point: cap at 5/sec/shop, scale up if observed.
 
-## Things still TBD (verify when we have a real app)
+## Verified endpoint paths (from Partner Center scope documentation)
 
-- Exact endpoint paths for affiliate creator search (need approved app to confirm)
+All paths use the v2 format: `/api/<resource>/<version>/<action>`.
+POST unless noted otherwise. All shop-scoped endpoints require `shop_cipher` as a query param.
+
+### Creator Marketplace — `seller.creator_marketplace.read`
+| Endpoint | Path |
+|---|---|
+| Seller Search Creator on Marketplace | `/api/affiliate_creator/202405/marketplace_creators/search` |
+| Get Marketplace Creator Performance | `/api/affiliate_creator/202405/marketplace_creators/performance/get` |
+| Get Seller Search Creator Marketplace Advanced Filters | `/api/affiliate_creator/202405/marketplace_creators/search_filters/get` |
+
+### Target Collaborations — `seller.affiliate_collaboration.write` + `.read`
+| Endpoint | Path | Scope |
+|---|---|---|
+| Create Target Collaboration | `/api/affiliate_seller/202405/target_collaborations/create` | write |
+| Update Target Collaboration | `/api/affiliate_seller/202405/target_collaborations/update` | write |
+| Remove Target Collaboration | `/api/affiliate_seller/202405/target_collaborations/remove` | write |
+| Generate Target Collaboration Link | `/api/affiliate_seller/202405/target_collaborations/link/generate` | write |
+| Search Target Collaborations | `/api/affiliate_seller/202405/target_collaborations/search` | read |
+| Query Target Collaboration Detail | `/api/affiliate_seller/202405/target_collaborations/get` | read |
+
+### Sample Applications — `seller.affiliate_collaboration.read` + `.write`
+| Endpoint | Path | Scope |
+|---|---|---|
+| Seller Search Sample Applications | `/api/affiliate_seller/202405/sample_applications/search` | read |
+| Seller Search Sample Applications Fulfillments | `/api/affiliate_seller/202405/sample_applications/fulfillments/search` | read |
+| Seller Review Sample Applications | `/api/affiliate_seller/202405/sample_applications/review` | write |
+| Seller Get Sample Request Deeplink | `/api/affiliate_seller/202405/sample_applications/deeplink/get` | read |
+
+### Messaging — `seller.affiliate_messages.write`
+| Endpoint | Path |
+|---|---|
+| Create Conversation with Creator | `/api/affiliate_seller/202405/conversations/create` |
+| Send IM Message | `/api/affiliate_seller/202405/messages/send` |
+| Get Conversation List | `/api/affiliate_seller/202405/conversations/list` |
+| Get Message in the Conversation | `/api/affiliate_seller/202405/conversations/messages/get` |
+| Mark Conversation Read | `/api/affiliate_seller/202405/conversations/read` |
+
+### Shop — `seller.shop.info`
+| Endpoint | Path | Method |
+|---|---|---|
+| Get Active Shops | `/api/seller/202309/shops/get_active` | GET |
+
+### Products — `seller.product.basic`
+| Endpoint | Path | Method |
+|---|---|---|
+| Search Products | `/api/products/202309/search` | POST |
+| Get Product | `/api/products/202309/products/{product_id}` | GET |
+
+### TAP Campaigns — `partner.tap_campaign.write` + `.read`
+| Endpoint | Path | Scope |
+|---|---|---|
+| Create Affiliate Partner Campaign | `/api/affiliate_partner/202405/campaigns/create` | write |
+| Publish Affiliate Partner Campaign | `/api/affiliate_partner/202405/campaigns/publish` | write |
+| Get Affiliate Partner Campaign Detail | `/api/affiliate_partner/202405/campaigns/get` | read |
+| Get Affiliate Partner Campaign List | `/api/affiliate_partner/202405/campaigns/list` | read |
+| Get Affiliate Partner Campaign Product List | `/api/affiliate_partner/202405/campaigns/products/list` | read |
+
+## Things still TBD
+
 - Shape of the targeted collaboration request body (varies by 2024xx vs 2025xx version)
 - Whether webhook delivery is available for invite/sample status changes (would let us drop polling)
+- Exact request/response body shapes for messaging endpoints (need live testing)

@@ -1,8 +1,9 @@
-# Affiliate creator search and detail.
+# Affiliate creator search and detail — seller.creator_marketplace.read scope.
 #
-# Endpoint paths and request shapes are stubbed against the published affiliate
-# API conventions; exact paths will be confirmed once we have an approved app
-# in Partner Center. Update docs/TIKTOK_API_NOTES.md as the schema is verified.
+# Real endpoints from TikTok Partner Center:
+#   - Seller Search Creator on Marketplace (POST)
+#   - Get Marketplace Creator Performance (POST)
+#   - Get Seller Search Creator Marketplace Advanced Filters (POST)
 module Tiktok
   module Resources
     class AffiliateCreator
@@ -14,7 +15,11 @@ module Tiktok
         @client = Tiktok::Client.new(token: token)
       end
 
-      # POST /api/affiliate_creator/202405/creators/search
+      # POST /api/affiliate_creator/202405/marketplace_creators/search
+      # Scope: seller.creator_marketplace.read
+      #
+      # Search creators by GMV, keywords, follower demographics.
+      # All data is last 30 days.
       #
       # @param filters [Hash] {
       #   min_gmv_cents:, max_gmv_cents:, gmv_tier:,
@@ -23,10 +28,10 @@ module Tiktok
       #   sort: "gmv_desc"|"followers_desc"|"engagement_desc",
       #   page_size:, page_token:
       # }
-      # @return [Array<Tiktok::Types::Creator>]
+      # @return [SearchResult]
       def search(filters: {})
         body = @client.post(
-          "/api/affiliate_creator/#{ENDPOINT_VERSION}/creators/search",
+          "/api/affiliate_creator/#{ENDPOINT_VERSION}/marketplace_creators/search",
           to_request_body(filters),
           shop_cipher: @shop_cipher
         )
@@ -35,13 +40,36 @@ module Tiktok
         SearchResult.new(creators: creators, next_page_token: body.dig("data", "next_page_token"), raw: body)
       end
 
-      # GET /api/affiliate_creator/202405/creators/{creator_id}
-      def find(external_id)
-        body = @client.get(
-          "/api/affiliate_creator/#{ENDPOINT_VERSION}/creators/#{external_id}",
+      # POST /api/affiliate_creator/202405/marketplace_creators/performance/get
+      # Scope: seller.creator_marketplace.read
+      #
+      # Get creator's marketplace info and performance metrics (last 30 days).
+      #
+      # @param creator_id [String] TikTok creator ID
+      # @return [Tiktok::Types::Creator]
+      def performance(creator_id:)
+        body = @client.post(
+          "/api/affiliate_creator/#{ENDPOINT_VERSION}/marketplace_creators/performance/get",
+          { creator_id: creator_id },
           shop_cipher: @shop_cipher
         )
         Tiktok::Types::Creator.from_api(body["data"] || {})
+      end
+
+      # POST /api/affiliate_creator/202405/marketplace_creators/search_filters/get
+      # Scope: seller.creator_marketplace.read
+      #
+      # Retrieve latest available search filters by country/region.
+      # Filters update dynamically.
+      #
+      # @param country_code [String] e.g. "US"
+      # @return [Hash] raw filter options
+      def advanced_filters(country_code:)
+        @client.post(
+          "/api/affiliate_creator/#{ENDPOINT_VERSION}/marketplace_creators/search_filters/get",
+          { country_code: country_code },
+          shop_cipher: @shop_cipher
+        )
       end
 
       private
