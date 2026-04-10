@@ -17,7 +17,7 @@ Rails.application.routes.draw do
     resources :campaigns
     resources :invites,     only: %i[index show]
     resources :samples,     only: %i[index show]
-    resource  :tiktok_connection, only: %i[show destroy]
+    resource  :tiktok_connection, only: %i[show create destroy]
     resources :members,     only: %i[index new create destroy]
   end
 

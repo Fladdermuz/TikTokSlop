@@ -3,16 +3,7 @@ module Authorization
 
   included do
     rescue_from ApplicationPolicy::NotAuthorizedError, with: :user_not_authorized
-  end
-
-  private
-
-  def authorize!(action, record_or_class)
-    policy = policy_for(record_or_class)
-    unless policy.public_send("#{action}?")
-      raise ApplicationPolicy::NotAuthorizedError.new(policy: policy, action: action)
-    end
-    true
+    helper_method :policy_for
   end
 
   def policy_for(record_or_class)
@@ -28,6 +19,16 @@ module Authorization
       shop:       Current.shop,
       record:     record
     )
+  end
+
+  private
+
+  def authorize!(action, record_or_class)
+    policy = policy_for(record_or_class)
+    unless policy.public_send("#{action}?")
+      raise ApplicationPolicy::NotAuthorizedError.new(policy: policy, action: action)
+    end
+    true
   end
 
   def user_not_authorized(exception)

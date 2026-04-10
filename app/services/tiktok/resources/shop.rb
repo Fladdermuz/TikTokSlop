@@ -9,14 +9,20 @@ module Tiktok
 
       # GET /api/seller/202309/shops
       # Returns the list of shops authorized for the given access token.
-      # Most sellers have one shop; we use the first.
       def list
         @client.get("/api/seller/202309/shops")
       end
 
-      def first_shop
+      # Most sellers have one shop; this is the convenience accessor used after
+      # OAuth to capture shop_cipher / shop name.
+      def first
         body = list
         Array(body.dig("data", "shops")).first
+      end
+
+      # Class-level convenience for callers (and easier to stub in tests).
+      def self.first_for(token:)
+        new(token: token).first
       end
     end
   end
