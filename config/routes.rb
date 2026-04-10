@@ -28,7 +28,12 @@ Rails.application.routes.draw do
     end
     resource  :moderation_preview, only: %i[create]
     resource  :message_generation, only: %i[create]
-    resources :invites,     only: %i[index show]
+    resources :invites, only: %i[index show] do
+      member do
+        post :retry_send
+      end
+    end
+    resources :bulk_invites, only: %i[new create]
     resources :samples,     only: %i[index show]
     resource  :tiktok_connection, only: %i[show create destroy]
     resources :members,     only: %i[index new create destroy]

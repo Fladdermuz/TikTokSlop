@@ -18,3 +18,8 @@ production:
     class: Tiktok::RefreshAllTokensJob
     queue: tiktok
     schedule: every 30 minutes
+
+  tiktok_sync_invite_status:
+    class: Tiktok::SyncAllInviteStatusJob
+    queue: tiktok
+    schedule: every 15 minutes

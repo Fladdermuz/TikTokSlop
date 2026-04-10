@@ -1,0 +1,60 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <div>
+    <%= link_to "← Back to creators", shop_creators_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">Invite creators to campaign</h1>
+    <p class="mt-1 text-sm text-gray-500"><%= @creators.size %> creators selected.</p>
+  </div>
+
+  <% if @campaigns.empty? %>
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <h2 class="font-semibold text-amber-900">No active campaigns</h2>
+      <p class="mt-1 text-sm text-amber-800">You need an active campaign to send invites. Create one and set its status to "active" first.</p>
+      <%= link_to "Go to campaigns", shop_campaigns_path, class: "mt-3 inline-block rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-500" %>
+    </div>
+  <% else %>
+    <%= form_with url: shop_bulk_invites_path, method: :post, class: "space-y-6" do |f| %>
+      <% @creator_ids.each do |id| %>
+        <%= f.hidden_field :creator_ids, value: id, multiple: true, id: nil %>
+      <% end %>
+
+      <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="text-base font-semibold text-gray-900">Select campaign</h2>
+        <div class="mt-3 space-y-2">
+          <% @campaigns.each do |c| %>
+            <label class="flex items-start gap-3 rounded-md border border-gray-200 p-3 cursor-pointer hover:bg-gray-50">
+              <%= f.radio_button :campaign_id, c.id, required: true, class: "mt-0.5 rounded-full border-gray-300 text-indigo-600 focus:ring-indigo-500" %>
+              <div>
+                <div class="text-sm font-medium text-gray-900"><%= c.name %></div>
+                <div class="text-xs text-gray-500"><%= c.product.name %> · <%= c.commission_rate ? "#{(c.commission_rate * 100).round(1)}% commission" : "No commission set" %> · <%= c.sample_offer? ? "Sample included" : "No sample" %></div>
+              </div>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="text-base font-semibold text-gray-900">Selected creators (<%= @creators.size %>)</h2>
+        <div class="mt-3 max-h-60 overflow-y-auto">
+          <ul class="divide-y divide-gray-100 text-sm">
+            <% @creators.each do |c| %>
+              <li class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                  <% if c.avatar_url.present? %>
+                    <img src="<%= c.avatar_url %>" class="h-6 w-6 rounded-full bg-gray-100">
+                  <% end %>
+                  <span class="text-gray-900">@<%= c.handle %></span>
+                </div>
+                <span class="text-gray-500 tabular-nums">$<%= number_with_delimiter(c.gmv_dollars.to_i) %> GMV</span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <%= link_to "Cancel", shop_creators_path, class: "text-sm text-gray-600 hover:text-gray-900" %>
+        <%= f.submit "Send #{@creators.size} invites", class: "rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 cursor-pointer" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

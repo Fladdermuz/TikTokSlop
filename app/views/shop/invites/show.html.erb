@@ -1,0 +1,83 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <div>
+    <%= link_to "← Back to invites", shop_invites_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Invite to @<%= @invite.creator.handle %></h1>
+        <p class="mt-1 text-sm text-gray-500">Campaign: <strong><%= @invite.campaign.name %></strong> · <%= @invite.campaign.product.name %></p>
+      </div>
+      <% colors = { "pending" => "bg-gray-100 text-gray-700", "sending" => "bg-blue-100 text-blue-700", "sent" => "bg-indigo-100 text-indigo-700", "accepted" => "bg-emerald-100 text-emerald-700", "declined" => "bg-red-100 text-red-700", "expired" => "bg-gray-200 text-gray-500", "failed" => "bg-red-100 text-red-700" } %>
+      <span class="inline-flex rounded-full px-3 py-1 text-sm font-medium <%= colors[@invite.status] || 'bg-gray-100' %>"><%= @invite.status %></span>
+    </div>
+
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+      <dt class="text-gray-500">Sent at</dt><dd class="text-gray-900"><%= @invite.sent_at&.strftime("%b %-d, %Y %-l:%M %p") || "—" %></dd>
+      <dt class="text-gray-500">Responded at</dt><dd class="text-gray-900"><%= @invite.responded_at&.strftime("%b %-d, %Y %-l:%M %p") || "—" %></dd>
+      <dt class="text-gray-500">External ID</dt><dd class="font-mono text-xs text-gray-500"><%= @invite.external_id || "—" %></dd>
+      <dt class="text-gray-500">Retries</dt><dd class="text-gray-900"><%= @invite.retry_count %></dd>
+    </dl>
+  </div>
+
+  <% if @invite.message.present? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Message sent</h2>
+      <pre class="mt-3 whitespace-pre-wrap rounded-md bg-gray-50 p-4 font-mono text-sm text-gray-800"><%= @invite.message %></pre>
+    </div>
+  <% end %>
+
+  <% if @invite.error_message.present? %>
+    <div class="rounded-lg border border-red-200 bg-red-50 p-6">
+      <h2 class="text-base font-semibold text-red-900">Error</h2>
+      <p class="mt-2 text-sm text-red-800"><%= @invite.error_message %></p>
+
+      <% if @failure_analysis %>
+        <div class="mt-4 rounded-md border border-red-100 bg-white p-4">
+          <h3 class="text-sm font-semibold text-gray-900">AI failure analysis</h3>
+          <p class="mt-1 text-sm text-gray-700"><%= @failure_analysis["explanation"] %></p>
+          <% if @failure_analysis["problematic_phrases"].present? %>
+            <div class="mt-2">
+              <span class="text-xs font-medium text-gray-500">Problematic phrases:</span>
+              <% @failure_analysis["problematic_phrases"].each do |phrase| %>
+                <code class="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-700"><%= phrase %></code>
+              <% end %>
+            </div>
+          <% end %>
+          <% if @failure_analysis["rewrite"].present? %>
+            <div class="mt-3">
+              <span class="text-xs font-medium text-gray-500">Suggested rewrite:</span>
+              <pre class="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-3 text-xs text-gray-800"><%= @failure_analysis["rewrite"] %></pre>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if policy_for(@invite).retry? && @invite.failed? %>
+        <div class="mt-4">
+          <%= button_to "Retry this invite", retry_send_shop_invite_path(@invite), method: :post,
+                class: "rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @moderation_check %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Moderation check</h2>
+      <p class="mt-1 text-sm text-gray-500">Last scan: risk = <strong><%= @moderation_check.risk %></strong> · <%= @moderation_check.issues.size %> issues</p>
+      <% if @moderation_check.issues.any? %>
+        <ul class="mt-2 space-y-1 text-sm">
+          <% @moderation_check.issues.each do |issue| %>
+            <li>
+              <span class="text-xs font-medium uppercase text-gray-500"><%= issue["severity"] %></span>
+              <span class="ml-1 font-mono text-xs"><%= issue["phrase"] %></span>
+              <span class="ml-1 text-xs text-gray-500">— <%= issue["reason"] || issue["category"] %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+</div>
