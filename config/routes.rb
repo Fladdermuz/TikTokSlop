@@ -41,6 +41,13 @@ Rails.application.routes.draw do
     end
     resource  :tiktok_connection, only: %i[show create destroy]
     resources :members,     only: %i[index new create destroy]
+    resource  :finance, only: [:show], controller: "finance" do
+      collection do
+        get :payments
+        get :statements
+        get :transactions
+      end
+    end
   end
 
   namespace :tiktok do

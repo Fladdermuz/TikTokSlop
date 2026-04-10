@@ -1,0 +1,87 @@
+<div class="space-y-6">
+  <div>
+    <%= link_to "← Finance overview", shop_finance_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900">Statements</h1>
+    <p class="mt-1 text-sm text-gray-500">Daily settlement statements from TikTok Shop.</p>
+  </div>
+
+  <%# Filters %>
+  <%= form_with url: statements_shop_finance_index_path, method: :get, class: "flex flex-wrap items-end gap-3" do |f| %>
+    <div>
+      <%= f.label :start_date, "From", class: "block text-xs font-medium text-gray-700" %>
+      <%= f.date_field :start_date, value: @start_date, class: "mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <%= f.label :end_date, "To", class: "block text-xs font-medium text-gray-700" %>
+      <%= f.date_field :end_date, value: @end_date, class: "mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <div>
+      <%= f.label :payment_status, "Payment Status", class: "block text-xs font-medium text-gray-700" %>
+      <%= f.select :payment_status, [["All", ""], ["Paid", "PAID"], ["Pending", "PENDING"], ["Failed", "FAILED"]],
+            { selected: @payment_status.to_s },
+            class: "mt-1 block rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+    </div>
+    <%= f.submit "Filter", class: "rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 cursor-pointer" %>
+  <% end %>
+
+  <% if @tiktok_error %>
+    <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      TikTok API error: <%= @tiktok_error %>
+    </div>
+  <% end %>
+
+  <% if @statements.any? %>
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-4 py-3">Statement ID</th>
+            <th class="px-4 py-3">Date</th>
+            <th class="px-4 py-3">Total Amount</th>
+            <th class="px-4 py-3">Currency</th>
+            <th class="px-4 py-3">Payment Status</th>
+            <th class="px-4 py-3">Transactions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @statements.each do |s| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 font-mono text-xs text-gray-500"><%= s["statement_id"] || s["id"] || "—" %></td>
+              <td class="px-4 py-3 text-gray-700"><%= s["statement_date"] || s["date"] || "—" %></td>
+              <td class="px-4 py-3 font-medium text-gray-900"><%= number_to_currency(s["total_amount"].to_f / 100, unit: "") %></td>
+              <td class="px-4 py-3 text-gray-700"><%= s["currency"] || "—" %></td>
+              <td class="px-4 py-3">
+                <% colors = { "PAID" => "bg-emerald-100 text-emerald-700", "PENDING" => "bg-amber-100 text-amber-700", "FAILED" => "bg-red-100 text-red-700" } %>
+                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium <%= colors[s["payment_status"]] || 'bg-gray-100 text-gray-600' %>">
+                  <%= s["payment_status"] || "—" %>
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <% if s["statement_id"].present? %>
+                  <%= link_to "View", transactions_shop_finance_index_path(mode: "statement", statement_id: s["statement_id"]),
+                        class: "text-indigo-600 hover:text-indigo-500" %>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @next_page_token.present? %>
+      <div class="flex justify-center">
+        <%= link_to "Load more", statements_shop_finance_index_path(start_date: @start_date, end_date: @end_date, payment_status: @payment_status, page_token: @next_page_token),
+              class: "rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+      <p class="text-sm text-gray-500">No statements found for the selected filters.</p>
+    </div>
+  <% end %>
+</div>
