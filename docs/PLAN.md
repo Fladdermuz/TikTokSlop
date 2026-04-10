@@ -178,20 +178,21 @@ Note: `000-default.conf` is **mis-named** — despite the default-sounding name 
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Foundation | ✅ done |
-| 1 | Multi-tenant foundation | ⏸ pending |
-| 2 | TikTok Shop API client | ⏸ pending |
-| 3 | OAuth flow (per-shop) | ⏸ pending (blocked on TikTok app approval) |
-| 4 | Creator discovery | ⏸ pending |
-| 4.5 | Message moderation pipeline (banned-keyword + AI) | ⏸ pending |
-| 5 | Campaign management | ⏸ pending |
-| 5.5 | Product knowledge base + AI message crafter | ⏸ pending |
-| 6 | Bulk invite engine | ⏸ pending |
+| 1 | Multi-tenant foundation | ✅ done |
+| 2 | TikTok Shop API client | ✅ done (signing verified against 2 reference impls; endpoint paths unvalidated until sandbox) |
+| 3 | OAuth flow (per-shop) | ✅ done (code complete; untested against real TikTok until app approved) |
+| 4 | Creator discovery | ✅ done |
+| 4.5 | Message moderation pipeline (banned-keyword + AI) | ✅ done (live Claude API tested) |
+| 5 | Campaign management | ✅ done |
+| 5.5 | Product knowledge base + AI message crafter | ✅ done (live Claude API tested) |
+| 6 | Bulk invite engine | ⏸ in progress |
 | 7 | Sample fulfillment | ⏸ pending |
 | 8 | Performance & analytics | ⏸ pending |
 | 9 | Shop-level user management UI | ⏸ pending |
 | 10 | Platform admin console | ⏸ pending |
 | 11 | Production hardening | ⏸ pending |
-| 12 | Deploy to bionox server | ⏸ pending |
+| 11.5 | Privacy policy + ToS + TikTok app submission prep | ⏸ pending |
+| 12 | Deploy to repify server as tikedon.com | ⏸ pending |
 | 13 | Post-launch (optional) | ⏸ pending |
 
 ---
@@ -1156,6 +1157,80 @@ Non-owners can leave. Owner must transfer or delete shop first.
 
 ---
 
+## Phase 11.5 — Privacy policy, ToS, and TikTok app submission prep
+
+**Goal**: Everything TikTok needs to see before they approve our Partner Center app. This phase produces the legal pages, the demo video script, and the submission materials. Without this, we cannot get API access.
+
+> **Why a separate phase**: TikTok explicitly rejects "beta, development, or test versions." They want to see a polished product with legal pages, a working demo, and clear scope justifications. This isn't a rubber stamp.
+
+### 11.5.1 Privacy policy page
+Static page at `tikedon.com/privacy`. Must cover:
+- What data Tikedon collects (TikTok OAuth tokens, creator profile data, shop data, usage analytics)
+- How data is stored (encrypted at rest, Postgres, hosted on US servers)
+- How data is shared (never sold; shared with TikTok via their API only)
+- Data retention (tokens refreshed automatically, deleted on disconnect; creator cache retained for search performance)
+- User rights (disconnect, data deletion, export)
+- Contact information
+
+### 11.5.2 Terms of Service page
+Static page at `tikedon.com/terms`. Must cover:
+- Service description (affiliate outreach automation for TikTok Shop sellers)
+- Acceptable use (no spam, no misleading claims, compliance with TikTok Shop policies)
+- Account responsibilities (shop admin is responsible for message content)
+- Limitation of liability
+- Termination clause
+- Modification clause
+
+### 11.5.3 Static pages controller + routes
+```ruby
+# config/routes.rb
+get "privacy", to: "pages#privacy"
+get "terms",   to: "pages#terms"
+```
+`PagesController` is unauthenticated (public). Tailwind-styled, minimal, professional.
+
+### 11.5.4 TikTok Partner Center app configuration checklist
+Matt does this manually at `partner.tiktokshop.com`:
+- [ ] Register as developer
+- [ ] Create app named "Tikedon"
+- [ ] Category: Affiliate
+- [ ] Icon: Tikedon logo
+- [ ] Description: "Tikedon helps TikTok Shop sellers manage affiliate outreach at scale — creator discovery by GMV, targeted collaborations, AI-crafted product-specific messages, sample fulfillment tracking, and campaign analytics."
+- [ ] Redirect URI: `https://tikedon.com/tiktok/callback`
+- [ ] Requested scopes: `affiliate.seller.read`, `affiliate.seller.write`, `authorization`, `seller.shop.read`
+- [ ] Privacy policy URL: `https://tikedon.com/privacy`
+- [ ] Terms of Service URL: `https://tikedon.com/terms`
+
+### 11.5.5 Demo video script
+Record a 2-3 minute screen recording walking through:
+1. Login page → sign in as admin
+2. Shop dashboard (connection status, stats)
+3. Products page → show a product → product knowledge base detail
+4. Creator search with GMV filter → select a few → show detail page
+5. Create new campaign → pick product → generate message from product (AI) → show moderation check
+6. TikTok connection page → "Connect TikTok Shop" button (shows the OAuth redirect exists)
+7. Briefly show campaign status transitions (draft → active)
+
+Script should emphasize: "This is a production tool for legitimate affiliate outreach. All messages are moderation-scanned before sending. Sellers manage their own TikTok Shop connections via OAuth."
+
+### 11.5.6 Scope justification document
+Required in the app review submission. One paragraph per scope:
+- `affiliate.seller.read`: "Search and discover affiliate creators by GMV, follower count, and category to find relevant partners for product promotion."
+- `affiliate.seller.write`: "Send targeted collaboration invitations and sample offers to selected creators on behalf of the authorized seller."
+- `authorization`: "Standard OAuth2 authorization flow for connecting seller accounts."
+- `seller.shop.read`: "Retrieve shop information and shop_cipher needed for API authentication after OAuth."
+
+**Deliverables**
+- Live privacy policy and ToS pages at tikedon.com/privacy and tikedon.com/terms
+- Partner Center app created and configured (by Matt)
+- Demo video recorded and uploaded
+- App submitted for review
+
+**Dependencies**: Phase 12 (deploy — the pages need to be live).
+**Estimated effort**: 1-2 hours for code, then Matt's time for Partner Center registration and video recording.
+
+---
+
 ## Phase 12 — Deploy to repify server as tikedon.com
 
 **Goal**: `https://tikedon.com` is live, SSL-secured via Cloudflare + Let's Encrypt, running under Apache + Passenger, co-tenanted with Repify.me and bionox.info without disturbing either.
@@ -1461,9 +1536,12 @@ Track blockers as they appear. Update status and resolution.
 | 2026-04-09 | Production domain confirmed as `tikedon.com` (CF → 146.190.139.89 = repify server) | resolved | Plan Phase 12 fully updated for Passenger + tikedon.com. Repify.me and bionox.info co-tenancy documented. |
 | 2026-04-09 | Email provider for Phase 9 (invites, password reset) | open | Decide between Postmark, Resend, Amazon SES before Phase 9 starts |
 | 2026-04-09 | Legal — ToS and privacy policy content for tikedon.com | open | Required for Phase 12 (TikTok production app review) |
-| 2026-04-09 | Anthropic Claude API key for moderation + message crafting | open | Required for Phases 4.5 and 5.5. Defaulting to Claude API (Anthropic) since we're already in that ecosystem; if Matt prefers OpenAI we can swap. |
-| 2026-04-09 | New requirement: pre-send moderation pipeline | resolved | Added as Phase 4.5 — keyword scanner + AI scanner + post-failure analyzer. Sits before Phase 5/6 in dependency order. |
-| 2026-04-09 | New requirement: per-product knowledge base + AI message crafter | resolved | Added as Phase 5.5 — ProductKnowledge schema, multiple import paths (manual, CSV, URL+AI extraction), Messaging::Crafter with template + per-creator personalized modes, cost tracking. |
+| 2026-04-09 | Anthropic Claude API key for moderation + message crafting | resolved | Copied from Repify.me local .env (sk-ant-a..., 108 chars). Stored in Rails encrypted credentials. Live-tested against Claude Haiku and Sonnet. |
+| 2026-04-09 | New requirement: pre-send moderation pipeline | resolved | Phase 4.5 complete. Keyword scanner + AI scanner + orchestrator + persistence + campaign editor UI. |
+| 2026-04-09 | New requirement: per-product knowledge base + AI message crafter | resolved | Phase 5.5 complete. ProductKnowledge schema, Messaging::Crafter, campaign editor Generate button. |
+| 2026-04-10 | TikTok API layer is untested against real TikTok servers | open | Signing algorithm cross-checked but never validated live. Endpoint paths, response shapes, OAuth flow all unconfirmed. MUST validate with sandbox keys as soon as Partner Center app is created. |
+| 2026-04-10 | TikTok app review requires demo video + privacy/ToS pages + live URL | open | Added Phase 11.5 covering all submission materials. Must deploy to tikedon.com first (Phase 12), then submit. TikTok rejects "beta/test" apps — our UI is polished enough to pass. |
+| 2026-04-10 | Privacy policy + ToS content for tikedon.com | open | Required for Phase 11.5 (TikTok app review) and Phase 12 (deploy). Draft content can be AI-generated, reviewed by Matt. |
 
 ---
 
