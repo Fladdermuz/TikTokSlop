@@ -17,9 +17,9 @@
 | 8 | Order Information | 430276 | `seller.order.info` | Awaiting submission (SENSITIVE) | Order details, delivery status |
 | 9 | Product Basic | 430148 | `seller.product.basic` | Awaiting submission | Read/manage product catalog |
 | 10 | Read Creator Marketplace | 925572 | `seller.creator_marketplace.read` | Under review | Creator search by GMV/followers/category |
-| 11 | Read Seller Affiliate Collaboration | 733764 | `seller.affiliate_collaboration.read` | — | Check invite status |
-| 12 | Shop Authorized Information | 431812 | `seller.authorization.info` | — | OAuth flow |
-| 13 | TikTok Shop Analytics | 948484 | `data.shop_analytics.public.read` | — | Performance metrics |
+| 11 | Read Seller Affiliate Collaboration | 733764 | `seller.affiliate_collaboration.read` | Under review | Read collab status, samples, orders |
+| 12 | Shop Authorized Information | 431812 | `seller.authorization.info` | Awaiting submission | OAuth flow, webhooks |
+| 13 | TikTok Shop Analytics | 948484 | `data.shop_analytics.public.read` | Awaiting submission | Shop/product/video/LIVE performance metrics |
 | 14 | Manage Affiliate Partner Campaigns | 733444 | `partner.tap_campaign.write` | Under review | Create/edit/publish TAP campaigns |
 | 15 | Manage Affiliate Partner Campaign Products | 733572 | `partner.tap_campaign.product.write` | Awaiting submission | Review products submitted to TAP campaigns |
 | 16 | Read Affiliate Partner Campaigns | 733508 | `partner.tap_campaign.read` | Under review | Read campaign performance/fulfillment/orders |
@@ -203,3 +203,59 @@ Everything else (Global Product CRUD, Promotions, Partner TAP Campaigns, Showcas
   - Get Marketplace Creator Performance — creator's marketplace info and performance metrics (last 30 days).
   - Get Seller Search Creator Marketplace Advanced Filters — retrieve latest available search filters by country/region. Filters update dynamically.
   - Seller Search Creator on Marketplace — search creators by GMV, keywords, follower demographics. All data is last 30 days.
+
+### Read Seller Affiliate Collaboration
+- **Scope ID**: 733764
+- **Scope Key**: `seller.affiliate_collaboration.read`
+- **Status**: Under review
+- **Used by**: `Tiktok::SyncInviteStatusJob`, `Tiktok::SyncSampleStatusJob`, dashboard analytics
+- **Endpoints**:
+  - Create Compass Offline Export Task — async export task for specified doc/plan type within time window.
+  - Download Compass Task File — download completed export task result file.
+  - Get Compass Task List — list export tasks from last 7 days with pagination.
+  - Get Open Collaboration Creator Content Detail — creator content details for a specific open collaboration.
+  - Get Open Collaboration Sample Rules — sample rule status/details for products in open collaboration.
+  - Get Open Collaboration Settings — open collaboration settings including auto-add.
+  - Query Target Collaboration Detail — get target collaboration information.
+  - Search Open Collaboration — all open collaboration info (commission rate, showcase/content creator count).
+  - Search Seller Affiliate Orders — retrieve affiliate-commission-eligible orders by seller. Track conversions.
+  - Search Target Collaborations — search existing target collaborations by name, ID, product, creator.
+  - Seller Get Sample Request Deeplink — TikTok deeplink to sample request page. Can encode as QR code for email.
+  - Seller Search Affiliate Open Collaboration Product — search open collaboration products by category/commission/keywords across regions.
+  - Seller Search Sample Applications — query sample applications by product, creator, or status.
+  - Seller Search Sample Applications Fulfillments — track sample application fulfillment status and whether it resulted in orders.
+
+### Shop Authorized Information
+- **Scope ID**: 431812
+- **Scope Key**: `seller.authorization.info`
+- **Status**: Awaiting submission
+- **Used by**: OAuth flow, webhook configuration, shop management
+- **Endpoints**:
+  - Deauthorize Shop — deauthorize a shop and notify seller by email.
+  - Delete Shop Webhook — delete webhook URL for a specific event topic.
+  - Get Authorized Shops — list of shops seller has authorized for the app. Get shop cipher for API calls.
+  - Get Shop Group — query product interoperability groups between shops (e.g. US + Mexico).
+  - Get Shop Webhooks — retrieve shop's webhooks and URLs.
+  - Get Widget Token — generate a widget token.
+  - Update Shop Webhook — update webhook URL for a specific event topic.
+
+### TikTok Shop Analytics
+- **Scope ID**: 948484
+- **Scope Key**: `data.shop_analytics.public.read`
+- **Status**: Awaiting submission
+- **Used by**: Dashboard analytics, performance reporting
+- **Endpoints**:
+  - Get Shop Performance — shop/seller level performance metrics.
+  - Get Shop Performance Per Hour — daily hourly breakdown, within 30 days including today.
+  - Get Shop Product Performance Detail — performance metrics for a single product.
+  - Get Shop Product Performance List — list of product performance metrics.
+  - Get Shop SKU Performance — SKU-level performance metrics.
+  - Get Shop SKU Performance List — list of SKU performance metrics.
+  - Get Shop Video Performance Details — detailed metrics for a specific video.
+  - Get Shop Video Performance List — list of videos and metrics for a shop.
+  - Get Shop Video Performance Overview — overall video performance across shop.
+  - Get Shop Video Product Performance List — product performance within a specific video.
+  - Get Shop LIVE Performance List — LIVE stream sessions and metrics.
+  - Get Shop LIVE Performance Overview — overall LIVE performance metrics.
+  - Get Shop LIVE Performance Per Minutes — minute-by-minute LIVE breakdown (after session ends). Official/marketing accounts only.
+  - Get Shop LIVE Products Performance List — per-product sales performance in LIVE sessions.
