@@ -1,7 +1,12 @@
 <div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-semibold text-gray-900">Invites</h1>
-    <p class="mt-1 text-sm text-gray-500">All outreach invites sent from <%= Current.shop.name %>.</p>
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Invites</h1>
+      <p class="mt-1 text-sm text-gray-500">All outreach invites sent from <%= Current.shop.name %>.</p>
+    </div>
+    <% if policy_for(Invite).create? %>
+      <%= link_to "New invite", shop_creators_path, class: "rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500" %>
+    <% end %>
   </div>
 
   <div class="flex gap-3">

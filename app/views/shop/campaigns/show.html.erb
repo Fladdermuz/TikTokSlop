@@ -15,6 +15,10 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <% if policy_for(Invite).create? %>
+          <%= link_to "Invite creators", shop_creators_path, class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500",
+                title: "Select creators and use the bulk invite flow to add them to a campaign" %>
+        <% end %>
         <% if policy_for(@campaign).update? && !@campaign.ended? %>
           <%= link_to "Edit", edit_shop_campaign_path(@campaign), class: "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
         <% end %>
