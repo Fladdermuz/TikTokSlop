@@ -35,7 +35,16 @@ class Campaign < ApplicationRecord
       errors.add(:status, "cannot transition from #{status} to #{new_status}")
       return false
     end
-    update(status: new_status)
+
+    result = update(status: new_status)
+
+    # After a successful activation, asynchronously create + publish the TAP
+    # campaign on TikTok. The status transition is never blocked on this call.
+    if result && new_status.to_s == "active"
+      Tiktok::CreateTapCampaignJob.perform_later(id)
+    end
+
+    result
   end
 
   # Editable fields depend on lifecycle state.

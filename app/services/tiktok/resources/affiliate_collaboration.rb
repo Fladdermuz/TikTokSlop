@@ -1,4 +1,4 @@
-# Targeted collaboration management — seller.affiliate_collaboration.write + .read scopes.
+# Targeted and open collaboration management — seller.affiliate_collaboration.write + .read scopes.
 #
 # Real endpoints from TikTok Partner Center:
 #   Write (seller.affiliate_collaboration.write):
@@ -6,9 +6,14 @@
 #     - Update Target Collaboration (POST)
 #     - Remove Target Collaboration (POST)
 #     - Generate Target Collaboration Link (POST)
+#     - Create Open Collaboration (POST)
+#     - Edit Open Collaboration Sample Rule (POST)
+#     - Edit Open Collaboration Settings (POST)
+#     - Remove Open Collaboration (POST)
 #   Read (seller.affiliate_collaboration.read):
 #     - Search Target Collaborations (POST)
 #     - Query Target Collaboration Detail (POST)
+#     - Search Open Collaboration (POST)
 module Tiktok
   module Resources
     class AffiliateCollaboration
@@ -122,6 +127,92 @@ module Tiktok
           shop_cipher: @shop_cipher
         )
         body.dig("data", "link") || body.dig("data", "url")
+      end
+
+      # ── Open Collaboration ───────────────────────────────────────────────────
+
+      # POST /api/affiliate_seller/202405/open_collaborations/create
+      # Scope: seller.affiliate_collaboration.write
+      #
+      # Create an open collaboration by selecting products and setting a
+      # commission rate. Visible in Creator Marketplace to all eligible creators.
+      #
+      # @param product_ids [Array<String>] TikTok product SKUs to include
+      # @param commission_rate [Float]     0.0–1.0
+      # @param attrs [Hash]               optional additional fields (e.g. description)
+      # @return [String] external open collaboration ID
+      def create_open(product_ids:, commission_rate:, **attrs)
+        body = @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/create",
+          { product_ids: product_ids, commission_rate: commission_rate }.merge(attrs),
+          shop_cipher: @shop_cipher
+        )
+        body.dig("data", "collaboration_id") || body.dig("data", "id")
+      end
+
+      # POST /api/affiliate_seller/202405/open_collaborations/sample_rules/edit
+      # Scope: seller.affiliate_collaboration.write
+      #
+      # Manage sample rules for an open collaboration (valid periods, thresholds
+      # for creator sample requests). Can create, update, or deactivate rules.
+      #
+      # @param collaboration_id [String]
+      # @param attrs [Hash] rule fields — e.g. { max_samples_per_creator:, valid_days:, active: }
+      # @return [Hash] raw response
+      def edit_sample_rules(collaboration_id:, **attrs)
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/sample_rules/edit",
+          { collaboration_id: collaboration_id }.merge(attrs),
+          shop_cipher: @shop_cipher
+        )
+      end
+
+      # POST /api/affiliate_seller/202405/open_collaborations/settings/edit
+      # Scope: seller.affiliate_collaboration.write
+      #
+      # Enroll or configure a product catalog into the open collaboration plan.
+      # Auto-enroll is off by default for all sellers.
+      #
+      # @param attrs [Hash] settings fields — e.g. { auto_add_new_products:, product_ids: }
+      # @return [Hash] raw response
+      def edit_settings(**attrs)
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/settings/edit",
+          attrs,
+          shop_cipher: @shop_cipher
+        )
+      end
+
+      # POST /api/affiliate_seller/202405/open_collaborations/search
+      # Scope: seller.affiliate_collaboration.read
+      #
+      # Search all open collaborations, returning commission rate, creator count,
+      # showcase/content counts, and product info.
+      #
+      # @param filters [Hash] search criteria — e.g. { product_id:, page_size:, page_token: }
+      # @return [Hash] raw response with open collaboration list
+      def search_open(filters: {})
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/search",
+          filters,
+          shop_cipher: @shop_cipher
+        )
+      end
+
+      # POST /api/affiliate_seller/202405/open_collaborations/remove
+      # Scope: seller.affiliate_collaboration.write
+      #
+      # Terminate an open collaboration for a product. Removal is not immediate —
+      # TikTok delays it to protect creator interests.
+      #
+      # @param collaboration_id [String]
+      # @return [Hash] raw response
+      def remove_open(collaboration_id)
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/remove",
+          { collaboration_id: collaboration_id },
+          shop_cipher: @shop_cipher
+        )
       end
     end
   end
