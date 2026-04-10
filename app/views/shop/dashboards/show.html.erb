@@ -1,0 +1,41 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900"><%= Current.shop.name %></h1>
+    <p class="mt-1 text-sm text-gray-500">Welcome back, <%= Current.user.display_name %>.</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">TikTok connection</div>
+      <div class="mt-2 text-lg font-semibold text-gray-900">
+        <% if Current.shop.tiktok_connected? %>
+          <span class="text-emerald-600">Connected</span>
+        <% else %>
+          <span class="text-amber-600">Not connected</span>
+        <% end %>
+      </div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Active campaigns</div>
+      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.campaigns.where(status: "active").count %></div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Invites sent</div>
+      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.invites.where.not(sent_at: nil).count %></div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Samples shipped</div>
+      <div class="mt-2 text-lg font-semibold text-gray-900"><%= Current.shop.samples.where(status: %w[shipped delivered]).count %></div>
+    </div>
+  </div>
+
+  <% unless Current.shop.tiktok_connected? %>
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <h2 class="text-base font-semibold text-amber-900">Connect your TikTok Shop</h2>
+      <p class="mt-1 text-sm text-amber-800">You need to authorize Tikedon with your TikTok Shop seller account before you can search creators or send invites.</p>
+      <div class="mt-4">
+        <%= link_to "Connect TikTok Shop", shop_tiktok_connection_path, class: "inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500" %>
+      </div>
+    </div>
+  <% end %>
+</div>

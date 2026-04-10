@@ -1,0 +1,58 @@
+<nav class="border-b border-gray-200 bg-white">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <div class="flex items-center gap-8">
+      <%= link_to root_path, class: "text-xl font-semibold tracking-tight text-gray-900" do %>
+        Tikedon
+      <% end %>
+
+      <% if Current.shop %>
+        <div class="hidden gap-6 md:flex">
+          <%= link_to "Dashboard", shop_dashboard_path, class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+          <%= link_to "Creators",  shop_creators_path,  class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+          <%= link_to "Campaigns", shop_campaigns_path, class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+          <%= link_to "Invites",   shop_invites_path,   class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+          <%= link_to "Samples",   shop_samples_path,   class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <% if available_shops.any? %>
+        <details class="relative">
+          <summary class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <span><%= Current.shop&.name || "Select shop" %></span>
+            <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+          </summary>
+          <div class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <% available_shops.each do |shop| %>
+              <%= button_to switch_shop_path(shop), method: :post, class: "flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50 #{shop == Current.shop ? 'font-semibold text-gray-900' : 'text-gray-700'}" do %>
+                <span><%= shop.name %></span>
+                <% if shop == Current.shop %>
+                  <span class="text-emerald-500">✓</span>
+                <% end %>
+              <% end %>
+            <% end %>
+            <div class="my-1 border-t border-gray-100"></div>
+            <%= link_to "Create new shop", new_shop_path, class: "block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+          </div>
+        </details>
+      <% end %>
+
+      <details class="relative">
+        <summary class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+            <%= (Current.user.display_name.first || "?").upcase %>
+          </span>
+          <span class="hidden md:inline"><%= Current.user.display_name %></span>
+        </summary>
+        <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <div class="border-b border-gray-100 px-3 py-2 text-xs text-gray-500"><%= Current.user.email_address %></div>
+          <% if Current.user.platform_admin? %>
+            <%= link_to "Admin console", admin_dashboard_path, class: "block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+          <% end %>
+          <%= button_to "Sign out", session_path, method: :delete, class: "block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" %>
+        </div>
+      </details>
+    </div>
+  </div>
+</nav>

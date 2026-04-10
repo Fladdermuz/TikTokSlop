@@ -1,16 +1,36 @@
 Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  root "dashboard#show"
+
+  resources :shops, only: %i[index new create] do
+    member do
+      post :switch
+    end
+  end
+
+  # Everything below operates under Current.shop set by the ShopContext concern.
+  namespace :shop do
+    resource :dashboard, only: :show
+    resources :creators,    only: %i[index show]
+    resources :campaigns
+    resources :invites,     only: %i[index show]
+    resources :samples,     only: %i[index show]
+    resource  :tiktok_connection, only: %i[show destroy]
+    resources :members,     only: %i[index new create destroy]
+  end
+
+  namespace :tiktok do
+    get :callback, to: "oauth#callback"
+  end
+
+  namespace :admin do
+    resource :dashboard, only: :show
+    resources :shops
+    resources :users
+  end
+
+  # Health check
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end

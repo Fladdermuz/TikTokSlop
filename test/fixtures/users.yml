@@ -3,7 +3,17 @@
 one:
   email_address: one@example.com
   password_digest: <%= password_digest %>
+  name: User One
+  platform_admin: false
 
 two:
   email_address: two@example.com
   password_digest: <%= password_digest %>
+  name: User Two
+  platform_admin: false
+
+admin:
+  email_address: admin@example.com
+  password_digest: <%= password_digest %>
+  name: Platform Admin
+  platform_admin: true

@@ -1,15 +1,13 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+alpha:
+  name: Alpha Shop
+  slug: alpha
+  plan: free
+  timezone: UTC
+  status: active
 
-one:
-  name: MyString
-  slug: MyString
-  plan: MyString
-  timezone: MyString
-  status: MyString
-
-two:
-  name: MyString
-  slug: MyString
-  plan: MyString
-  timezone: MyString
-  status: MyString
+beta:
+  name: Beta Shop
+  slug: beta
+  plan: free
+  timezone: UTC
+  status: active
