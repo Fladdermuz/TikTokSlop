@@ -86,7 +86,7 @@ class Shop::CampaignsController < Shop::BaseController
   end
 
   def campaign_params
-    params.expect(campaign: %i[name product_id commission_rate sample_offer message_template notes status])
+    params.expect(campaign: %i[name product_id commission_rate sample_offer message_template follow_up_template personalize_per_creator notes status])
   end
 
   def ensure_products_exist

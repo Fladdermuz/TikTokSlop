@@ -34,7 +34,11 @@ Rails.application.routes.draw do
       end
     end
     resources :bulk_invites, only: %i[new create]
-    resources :samples,     only: %i[index show]
+    resources :samples, only: %i[index show update] do
+      member do
+        post :record_spark_code
+      end
+    end
     resource  :tiktok_connection, only: %i[show create destroy]
     resources :members,     only: %i[index new create destroy]
   end

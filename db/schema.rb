@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_121959) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_135737) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,6 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_121959) do
     t.decimal "commission_rate", precision: 6, scale: 4
     t.datetime "created_at", null: false
     t.string "external_id"
+    t.text "follow_up_template"
     t.text "message_template"
     t.string "name", null: false
     t.text "notes"
@@ -171,16 +172,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_121959) do
     t.datetime "created_at", null: false
     t.datetime "delivered_at"
     t.string "external_id"
+    t.integer "follow_up_count", default: 0, null: false
     t.bigint "invite_id", null: false
+    t.text "last_follow_up_message"
+    t.integer "max_follow_ups", default: 3, null: false
+    t.datetime "next_follow_up_at"
     t.jsonb "raw", default: {}, null: false
     t.datetime "shipped_at"
     t.bigint "shop_id", null: false
+    t.string "spark_code"
+    t.datetime "spark_code_received_at"
     t.string "status", default: "requested", null: false
     t.string "tracking_number"
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_samples_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
     t.index ["invite_id"], name: "index_samples_on_invite_id"
+    t.index ["next_follow_up_at"], name: "index_samples_on_next_follow_up_at", where: "((next_follow_up_at IS NOT NULL) AND ((status)::text = ANY ((ARRAY['delivered'::character varying, 'follow_up_sent'::character varying])::text[])))"
     t.index ["shop_id"], name: "index_samples_on_shop_id"
+    t.index ["spark_code"], name: "index_samples_on_spark_code", where: "(spark_code IS NOT NULL)"
     t.index ["status"], name: "index_samples_on_status"
   end
 

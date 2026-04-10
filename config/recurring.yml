@@ -23,3 +23,8 @@ production:
     class: Tiktok::SyncAllInviteStatusJob
     queue: tiktok
     schedule: every 15 minutes
+
+  tiktok_scan_spark_code_follow_ups:
+    class: Tiktok::ScanForFollowUpsJob
+    queue: tiktok
+    schedule: every 2 hours

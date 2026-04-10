@@ -79,6 +79,14 @@
   </div>
 
   <div>
+    <%= f.label :follow_up_template, "Spark Code follow-up template", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_area :follow_up_template, rows: 6, disabled: !editable.include?("follow_up_template"),
+          placeholder: Sample::DEFAULT_FOLLOW_UP_TEMPLATE.strip,
+          class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
+    <p class="mt-1 text-xs text-gray-500">Sent automatically after a sample is delivered. Leave blank to use the default Spark Code request.</p>
+  </div>
+
+  <div>
     <%= f.label :notes, "Internal notes", class: "block text-sm font-medium text-gray-700" %>
     <%= f.text_area :notes, rows: 3, disabled: !editable.include?("notes"),
           class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>

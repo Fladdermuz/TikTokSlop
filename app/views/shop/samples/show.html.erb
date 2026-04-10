@@ -1,0 +1,77 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <div>
+    <%= link_to "← Back to samples", shop_samples_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Sample for @<%= @creator.handle %></h1>
+        <p class="mt-1 text-sm text-gray-500"><%= @campaign.name %> · <%= @campaign.product.name %></p>
+      </div>
+      <% colors = { "requested" => "bg-gray-100 text-gray-700", "approved" => "bg-blue-100 text-blue-700", "shipped" => "bg-indigo-100 text-indigo-700", "delivered" => "bg-emerald-100 text-emerald-700", "follow_up_sent" => "bg-amber-100 text-amber-700", "spark_code_received" => "bg-emerald-200 text-emerald-800", "no_response" => "bg-gray-200 text-gray-500", "rejected" => "bg-red-100 text-red-700", "returned" => "bg-red-100 text-red-700" } %>
+      <span class="inline-flex rounded-full px-3 py-1 text-sm font-medium <%= colors[@sample.status] %>"><%= @sample.status.tr("_", " ") %></span>
+    </div>
+
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+      <dt class="text-gray-500">Shipped at</dt><dd><%= @sample.shipped_at&.strftime("%b %-d, %Y") || "—" %></dd>
+      <dt class="text-gray-500">Delivered at</dt><dd><%= @sample.delivered_at&.strftime("%b %-d, %Y") || "—" %></dd>
+      <dt class="text-gray-500">Tracking</dt><dd><%= @sample.tracking_number.presence || "—" %> <%= @sample.carrier.presence ? "(#{@sample.carrier})" : "" %></dd>
+      <dt class="text-gray-500">Follow-ups sent</dt><dd><%= @sample.follow_up_count %> / <%= @sample.max_follow_ups %></dd>
+      <dt class="text-gray-500">Next follow-up</dt><dd><%= @sample.next_follow_up_at&.strftime("%b %-d, %Y %-l:%M%P") || "—" %></dd>
+    </dl>
+  </div>
+
+  <%# Spark Code section %>
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <h2 class="text-base font-semibold text-gray-900">Spark Ads Code</h2>
+    <% if @sample.spark_code.present? %>
+      <div class="mt-3 flex items-center gap-3">
+        <code class="rounded-md bg-emerald-50 px-4 py-2 font-mono text-lg text-emerald-800"><%= @sample.spark_code %></code>
+        <span class="text-xs text-gray-500">Received <%= @sample.spark_code_received_at&.strftime("%b %-d, %Y") %></span>
+      </div>
+    <% else %>
+      <p class="mt-2 text-sm text-gray-500">No Spark Code received yet. Enter it manually when the creator sends it:</p>
+      <%= form_with url: record_spark_code_shop_sample_path(@sample), method: :post, class: "mt-3 flex items-end gap-3" do |f| %>
+        <div class="flex-1">
+          <%= f.text_field :spark_code, placeholder: "Paste Spark Ads code here...",
+                class: "block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+        </div>
+        <%= f.submit "Save code", class: "rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 cursor-pointer" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# Status actions %>
+  <% if policy_for(@sample).update? && !@sample.terminal? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Update status</h2>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <% case @sample.status %>
+        <% when "requested" %>
+          <%= button_to "Mark Approved", shop_sample_path(@sample, transition: "approved"), method: :patch, class: "rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+          <%= button_to "Reject", shop_sample_path(@sample, transition: "rejected"), method: :patch, class: "rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50" %>
+        <% when "approved" %>
+          <%= form_with url: shop_sample_path(@sample, transition: "shipped"), method: :patch, class: "flex items-end gap-2" do |f| %>
+            <%= f.text_field :tracking_number, placeholder: "Tracking #", class: "rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+            <%= f.text_field :carrier, placeholder: "Carrier", class: "rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+            <%= f.submit "Mark Shipped", class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 cursor-pointer" %>
+          <% end %>
+        <% when "shipped" %>
+          <%= button_to "Mark Delivered", shop_sample_path(@sample, transition: "delivered"), method: :patch, class: "rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500" %>
+          <%= button_to "Mark Returned", shop_sample_path(@sample, transition: "returned"), method: :patch, class: "rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50" %>
+        <% when "delivered", "follow_up_sent" %>
+          <%= button_to "Mark No Response", shop_sample_path(@sample, transition: "no_response"), method: :patch, class: "rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Last follow-up message %>
+  <% if @sample.last_follow_up_message.present? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Last follow-up message</h2>
+      <pre class="mt-3 whitespace-pre-wrap rounded-md bg-gray-50 p-4 font-mono text-sm text-gray-800"><%= @sample.last_follow_up_message %></pre>
+    </div>
+  <% end %>
+</div>

@@ -41,10 +41,10 @@ class Campaign < ApplicationRecord
   # Editable fields depend on lifecycle state.
   def editable_fields
     case status
-    when "draft"  then %w[name product_id commission_rate sample_offer message_template notes]
-    when "active" then %w[message_template notes]  # send-time template edits only
-    when "paused" then %w[message_template notes]
-    when "ended"  then []  # read-only
+    when "draft"  then %w[name product_id commission_rate sample_offer message_template follow_up_template personalize_per_creator notes]
+    when "active" then %w[message_template follow_up_template notes]
+    when "paused" then %w[message_template follow_up_template notes]
+    when "ended"  then []
     else []
     end
   end

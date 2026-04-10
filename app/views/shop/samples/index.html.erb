@@ -1,0 +1,57 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900">Samples</h1>
+    <p class="mt-1 text-sm text-gray-500">Product samples sent to creators. Track shipments and collect Spark Codes.</p>
+  </div>
+
+  <div class="flex gap-3">
+    <%= link_to "All", shop_samples_path, class: "rounded-md px-3 py-1.5 text-sm #{params[:status].blank? ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}" %>
+    <% %w[requested approved shipped delivered follow_up_sent spark_code_received no_response].each do |s| %>
+      <%= link_to s.tr("_", " ").capitalize, shop_samples_path(status: s), class: "rounded-md px-3 py-1.5 text-sm #{params[:status] == s ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}" %>
+    <% end %>
+  </div>
+
+  <% if @samples.any? %>
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-4 py-3">Creator</th>
+            <th class="px-4 py-3">Campaign</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Tracking</th>
+            <th class="px-4 py-3">Spark Code</th>
+            <th class="px-4 py-3">Follow-ups</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @samples.each do |s| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3"><%= link_to "@#{s.invite.creator.handle}", shop_creator_path(s.invite.creator), class: "text-gray-900 hover:text-indigo-600" %></td>
+              <td class="px-4 py-3 text-gray-700"><%= s.invite.campaign.name %></td>
+              <td class="px-4 py-3">
+                <% colors = { "requested" => "bg-gray-100 text-gray-700", "approved" => "bg-blue-100 text-blue-700", "shipped" => "bg-indigo-100 text-indigo-700", "delivered" => "bg-emerald-100 text-emerald-700", "follow_up_sent" => "bg-amber-100 text-amber-700", "spark_code_received" => "bg-emerald-200 text-emerald-800", "no_response" => "bg-gray-200 text-gray-500", "rejected" => "bg-red-100 text-red-700", "returned" => "bg-red-100 text-red-700" } %>
+                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium <%= colors[s.status] %>"><%= s.status.tr("_", " ") %></span>
+              </td>
+              <td class="px-4 py-3 text-xs text-gray-500"><%= s.tracking_number || "—" %></td>
+              <td class="px-4 py-3 font-mono text-xs">
+                <% if s.spark_code.present? %>
+                  <span class="text-emerald-700"><%= s.spark_code.truncate(12) %></span>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-xs text-gray-500"><%= s.follow_up_count %>/<%= s.max_follow_ups %></td>
+              <td class="px-4 py-3"><%= link_to "View", shop_sample_path(s), class: "text-sm text-indigo-600 hover:text-indigo-500" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+      <p class="text-sm text-gray-500">No samples yet. Samples are automatically created when a creator accepts an invite with a sample offer.</p>
+    </div>
+  <% end %>
+</div>

@@ -16,7 +16,23 @@ class Invite < ApplicationRecord
   scope :accepted, -> { where(status: "accepted") }
   scope :failed,   -> { where(status: "failed") }
 
-  def pending?; status == "pending"; end
-  def sent?;    status == "sent";    end
-  def failed?;  status == "failed";  end
+  def pending?;  status == "pending";  end
+  def sent?;     status == "sent";    end
+  def accepted?; status == "accepted"; end
+  def failed?;   status == "failed";  end
+
+  after_update :auto_create_sample_on_acceptance
+
+  private
+
+  def auto_create_sample_on_acceptance
+    return unless saved_change_to_status? && status == "accepted"
+    return unless campaign.sample_offer?
+    return if sample.present?
+
+    create_sample!(
+      shop: shop,
+      status: "requested"
+    )
+  end
 end
