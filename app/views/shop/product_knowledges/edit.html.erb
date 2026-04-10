@@ -1,0 +1,80 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <div>
+    <%= link_to "← Back", shop_product_knowledge_path(@product), class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">Edit knowledge — <%= @product.name %></h1>
+    <p class="mt-1 text-sm text-gray-500">The more detail here, the better the AI message crafter performs.</p>
+  </div>
+
+  <%= form_with model: @knowledge, url: shop_product_knowledge_path(@product), method: :patch, class: "space-y-6 rounded-lg border border-gray-200 bg-white p-6" do |f| %>
+    <% if @knowledge.errors.any? %>
+      <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <%= @knowledge.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <% field_class = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" %>
+
+    <fieldset class="space-y-4">
+      <legend class="text-sm font-semibold text-gray-900">Basics</legend>
+      <div>
+        <%= f.label :short_description, "Short description (1 sentence)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :short_description, class: field_class %>
+      </div>
+      <div>
+        <%= f.label :long_description, "Full description", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :long_description, rows: 4, class: field_class %>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label :brand_name, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :brand_name, class: field_class %>
+        </div>
+        <div>
+          <%= f.label :size_or_serving, "Size / serving", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.text_field :size_or_serving, class: field_class %>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="space-y-4">
+      <legend class="text-sm font-semibold text-gray-900">Ingredients & Claims</legend>
+      <div>
+        <%= f.label :ingredients, "Key ingredients", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :ingredients, rows: 3, class: field_class, placeholder: "L-Ascorbic Acid (20%), Hyaluronic Acid, ..." %>
+      </div>
+      <div>
+        <%= f.label :benefits, "Benefits (one per line)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :benefits, rows: 4, class: field_class %>
+      </div>
+      <div>
+        <%= f.label :usp, "Unique selling proposition", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :usp, rows: 2, class: field_class, placeholder: "What makes this product different from competitors?" %>
+      </div>
+      <div>
+        <%= f.label :warnings, "Warnings / allergens", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :warnings, rows: 2, class: field_class %>
+      </div>
+    </fieldset>
+
+    <fieldset class="space-y-4">
+      <legend class="text-sm font-semibold text-gray-900">Audience & Positioning</legend>
+      <div>
+        <%= f.label :target_audience, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :target_audience, rows: 2, class: field_class, placeholder: "Skincare-focused creators, women 25-45 ..." %>
+      </div>
+      <div>
+        <%= f.label :use_cases, "Use cases / how to use", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :use_cases, rows: 2, class: field_class %>
+      </div>
+      <div>
+        <%= f.label :brand_voice, "Brand voice / tone", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :brand_voice, rows: 2, class: field_class, placeholder: "Friendly, science-backed, never hyped ..." %>
+      </div>
+    </fieldset>
+
+    <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+      <%= link_to "Cancel", shop_product_knowledge_path(@product), class: "text-sm text-gray-600 hover:text-gray-900" %>
+      <%= f.submit "Save knowledge", class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 cursor-pointer" %>
+    </div>
+  <% end %>
+</div>

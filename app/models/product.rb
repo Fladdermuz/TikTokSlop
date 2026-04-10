@@ -3,6 +3,7 @@ class Product < ApplicationRecord
 
   STATUSES = %w[active inactive].freeze
 
+  has_one  :knowledge, class_name: "ProductKnowledge", dependent: :destroy
   has_many :campaigns, dependent: :restrict_with_error
 
   validates :name, presence: true

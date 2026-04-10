@@ -44,15 +44,25 @@
     </div>
   </div>
 
-  <div data-controller="moderation" data-moderation-url-value="<%= shop_moderation_preview_path %>">
+  <div data-controller="moderation"
+       data-moderation-url-value="<%= shop_moderation_preview_path %>"
+       data-generate-url="<%= shop_message_generation_path %>"
+       data-campaign-id="<%= campaign.persisted? ? campaign.id : '' %>">
     <div class="flex items-center justify-between">
       <%= f.label :message_template, "Message template", class: "block text-sm font-medium text-gray-700" %>
       <% if editable.include?("message_template") %>
-        <button type="button"
-                data-action="moderation#runAiCheck"
-                class="rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50">
-          Run AI moderation check
-        </button>
+        <div class="flex gap-2">
+          <button type="button"
+                  data-action="moderation#generateFromProduct"
+                  class="rounded-md border border-emerald-300 bg-white px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+            Generate from product
+          </button>
+          <button type="button"
+                  data-action="moderation#runAiCheck"
+                  class="rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50">
+            Run AI moderation check
+          </button>
+        </div>
       <% end %>
     </div>
     <%= f.text_area :message_template, rows: 8, disabled: !editable.include?("message_template"),

@@ -23,8 +23,11 @@ Rails.application.routes.draw do
         post :transition
       end
     end
-    resources :products, only: %i[index new create show edit update]
+    resources :products, only: %i[index new create show edit update] do
+      resource :knowledge, only: %i[show edit update], controller: "product_knowledges"
+    end
     resource  :moderation_preview, only: %i[create]
+    resource  :message_generation, only: %i[create]
     resources :invites,     only: %i[index show]
     resources :samples,     only: %i[index show]
     resource  :tiktok_connection, only: %i[show create destroy]

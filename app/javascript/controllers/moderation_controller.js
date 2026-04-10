@@ -85,6 +85,51 @@ export default class extends Controller {
     }
   }
 
+  // Replace the textarea content with an AI-generated template.
+  applyGeneration(event) {
+    const text = event.currentTarget.dataset.text
+    if (text && this.hasTextareaTarget) {
+      this.textareaTarget.value = text
+      this.textareaTarget.dispatchEvent(new Event("input"))
+    }
+  }
+
+  // Call the message_generation endpoint with current campaign form context.
+  async generateFromProduct(event) {
+    event.preventDefault()
+    if (!this.hasOutputTarget) return
+
+    this.outputTarget.innerHTML = '<div class="text-sm text-gray-500">Generating message from product knowledge...</div>'
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+    const formData = new FormData()
+    // Grab product_id from the form's select
+    const productSelect = document.querySelector('[name="campaign[product_id]"]')
+    if (productSelect) formData.append("product_id", productSelect.value)
+    const nameField = document.querySelector('[name="campaign[name]"]')
+    if (nameField) formData.append("campaign_name", nameField.value)
+    const commField = document.querySelector('[name="campaign[commission_rate]"]')
+    if (commField) formData.append("commission_rate", commField.value)
+    const sampleField = document.querySelector('[name="campaign[sample_offer]"]')
+    if (sampleField) formData.append("sample_offer", sampleField.checked ? "true" : "false")
+    // If campaign is persisted, pass its ID
+    const campaignId = this.element.dataset.campaignId
+    if (campaignId) formData.append("campaign_id", campaignId)
+
+    try {
+      const genUrl = this.element.dataset.generateUrl
+      const response = await fetch(genUrl, {
+        method: "POST",
+        headers: { "X-CSRF-Token": csrfToken || "", "Accept": "text/html" },
+        body: formData
+      })
+      const html = await response.text()
+      this.outputTarget.innerHTML = html
+    } catch (err) {
+      this.outputTarget.innerHTML = `<div class="text-sm text-red-600">Generation failed: ${err.message}</div>`
+    }
+  }
+
   debounce(fn, wait) {
     let timer = null
     return (...args) => {

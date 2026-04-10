@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_024832) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_121959) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,6 +36,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_024832) do
     t.text "message_template"
     t.string "name", null: false
     t.text "notes"
+    t.boolean "personalize_per_creator", default: false, null: false
     t.string "product_external_id"
     t.bigint "product_id", null: false
     t.boolean "sample_offer", default: false, null: false
@@ -122,6 +123,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_024832) do
     t.index ["checkable_type", "checkable_id"], name: "index_moderation_checks_on_checkable"
     t.index ["risk"], name: "index_moderation_checks_on_risk"
     t.index ["shop_id"], name: "index_moderation_checks_on_shop_id"
+  end
+
+  create_table "product_knowledges", force: :cascade do |t|
+    t.text "benefits"
+    t.string "brand_name"
+    t.text "brand_voice"
+    t.string "certifications", default: [], array: true
+    t.datetime "created_at", null: false
+    t.datetime "imported_at"
+    t.bigint "imported_by_id"
+    t.text "ingredients"
+    t.text "long_description"
+    t.bigint "product_id", null: false
+    t.jsonb "raw_imports", default: {}, null: false
+    t.text "short_description"
+    t.string "size_or_serving"
+    t.string "source_urls", default: [], array: true
+    t.text "target_audience"
+    t.datetime "updated_at", null: false
+    t.text "use_cases"
+    t.text "usp"
+    t.text "warnings"
+    t.index ["imported_by_id"], name: "index_product_knowledges_on_imported_by_id"
+    t.index ["product_id"], name: "index_product_knowledges_on_product_id", unique: true
   end
 
   create_table "products", force: :cascade do |t|
@@ -217,6 +242,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_024832) do
   add_foreign_key "memberships", "shops"
   add_foreign_key "memberships", "users"
   add_foreign_key "moderation_checks", "shops"
+  add_foreign_key "product_knowledges", "products"
+  add_foreign_key "product_knowledges", "users", column: "imported_by_id"
   add_foreign_key "products", "shops"
   add_foreign_key "samples", "invites"
   add_foreign_key "samples", "shops"
