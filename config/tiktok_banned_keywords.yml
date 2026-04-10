@@ -1,0 +1,131 @@
+# Curated list of phrases and patterns that TikTok has historically flagged or
+# rejected in affiliate outreach messages. Hand-maintained; grow as we observe
+# real failures.
+#
+# Each category has:
+#   severity:  "high" (hard block) | "medium" (warn, still pass) | "low" (info)
+#   phrases:   case-insensitive substring match
+#   patterns:  regex match (use sparingly, must be valid Ruby regex)
+#   note:      why this is flagged (for user-facing explanations)
+#
+# The KeywordScanner returns a hit for any match, combined with its category
+# metadata. Update `scanner_version` at the bottom whenever rules change so
+# cached results can be invalidated.
+
+categories:
+  income_claims:
+    severity: high
+    note: "Income/earnings claims are flagged as misleading. Avoid guarantees, dollar amounts, or percentage returns."
+    phrases:
+      - "guaranteed payout"
+      - "guaranteed income"
+      - "guaranteed earnings"
+      - "passive income"
+      - "make money fast"
+      - "make easy money"
+      - "get rich"
+      - "financial freedom"
+      - "quit your job"
+      - "work from home"
+      - "six figures"
+    patterns:
+      - '\$\d+\s*(?:per|\/|a)\s*(?:day|week|month|year|hour)'
+      - '\b\d+%\s*(?:roi|return|profit|commission\s+guaranteed)'
+
+  health_claims:
+    severity: high
+    note: "Unproven health / medical claims. TikTok rejects anything that sounds like an FDA violation."
+    phrases:
+      - "fda approved"
+      - "clinically proven"
+      - "miracle cure"
+      - "cure cancer"
+      - "lose weight fast"
+      - "weight loss guaranteed"
+      - "prevents disease"
+      - "anti-aging miracle"
+      - "doctor recommended"
+      - "100% natural cure"
+
+  external_platforms:
+    severity: high
+    note: "TikTok penalizes redirecting creators off-platform. Never mention other messaging apps in outreach."
+    phrases:
+      - "whatsapp"
+      - "telegram"
+      - "discord server"
+      - "signal app"
+      - "wechat"
+      - "viber"
+      - "dm me on instagram"
+      - "follow me on instagram"
+      - "check my bio for"
+      - "link in bio"
+
+  contact_info:
+    severity: high
+    note: "Personal contact info exchange is blocked by TikTok Shop messaging."
+    phrases:
+      - "email me at"
+      - "text me at"
+      - "call me at"
+      - "reach me at"
+      - "my phone number"
+    patterns:
+      - '\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b'
+      - '(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b'
+
+  spam_markers:
+    severity: medium
+    note: "Urgency and high-pressure language triggers spam filters."
+    phrases:
+      - "act now"
+      - "limited time only"
+      - "while supplies last"
+      - "exclusive offer"
+      - "don't miss out"
+      - "last chance"
+      - "urgent"
+      - "hurry"
+    patterns:
+      - '[A-Z]{6,}'  # 6+ consecutive uppercase letters (shouty)
+      - '[\u{1F300}-\u{1F9FF}]{4,}'  # 4+ emoji in a row
+
+  politics_and_religion:
+    severity: medium
+    note: "Divisive political or religious content is flagged by TikTok's community guidelines."
+    phrases:
+      - "democrat"
+      - "republican"
+      - "trump"
+      - "biden"
+      - "election"
+      - "anti-vax"
+      - "qanon"
+
+  competitor_platforms:
+    severity: medium
+    note: "Mentioning competing e-commerce platforms in TikTok Shop outreach is flagged."
+    phrases:
+      - "amazon"
+      - "shopify store"
+      - "walmart"
+      - "ebay"
+      - "etsy"
+      - "our shopify"
+
+  restricted_products:
+    severity: high
+    note: "Categories TikTok explicitly bans from affiliate promotion."
+    phrases:
+      - "cbd oil"
+      - "vape"
+      - "e-cigarette"
+      - "gambling"
+      - "casino"
+      - "crypto"
+      - "bitcoin"
+      - "investment opportunity"
+      - "forex"
+
+scanner_version: 1

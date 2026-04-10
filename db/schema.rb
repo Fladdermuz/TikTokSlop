@@ -10,9 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_023418) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_024832) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "ai_usage_logs", force: :cascade do |t|
+    t.integer "cost_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "feature", null: false
+    t.integer "input_tokens", default: 0, null: false
+    t.string "model", null: false
+    t.integer "output_tokens", default: 0, null: false
+    t.string "request_id"
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "created_at"], name: "index_ai_usage_logs_on_shop_id_and_created_at"
+    t.index ["shop_id", "feature"], name: "index_ai_usage_logs_on_shop_id_and_feature"
+    t.index ["shop_id"], name: "index_ai_usage_logs_on_shop_id"
+  end
 
   create_table "campaigns", force: :cascade do |t|
     t.decimal "commission_rate", precision: 6, scale: 4
@@ -90,6 +105,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_023418) do
     t.index ["shop_id"], name: "index_memberships_on_shop_id"
     t.index ["user_id", "shop_id"], name: "index_memberships_on_user_id_and_shop_id", unique: true
     t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "moderation_checks", force: :cascade do |t|
+    t.bigint "checkable_id", null: false
+    t.string "checkable_type", null: false
+    t.text "checked_text", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "issues", default: [], null: false
+    t.string "risk", null: false
+    t.jsonb "scanner_versions", default: {}, null: false
+    t.bigint "shop_id", null: false
+    t.text "suggested_rewrite"
+    t.datetime "updated_at", null: false
+    t.index ["checkable_type", "checkable_id", "created_at"], name: "idx_moderation_checks_on_checkable_latest"
+    t.index ["checkable_type", "checkable_id"], name: "index_moderation_checks_on_checkable"
+    t.index ["risk"], name: "index_moderation_checks_on_risk"
+    t.index ["shop_id"], name: "index_moderation_checks_on_shop_id"
   end
 
   create_table "products", force: :cascade do |t|
@@ -176,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_023418) do
     t.index ["platform_admin"], name: "index_users_on_platform_admin", where: "(platform_admin = true)"
   end
 
+  add_foreign_key "ai_usage_logs", "shops"
   add_foreign_key "campaigns", "products"
   add_foreign_key "campaigns", "shops"
   add_foreign_key "invites", "campaigns"
@@ -183,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_023418) do
   add_foreign_key "invites", "shops"
   add_foreign_key "memberships", "shops"
   add_foreign_key "memberships", "users"
+  add_foreign_key "moderation_checks", "shops"
   add_foreign_key "products", "shops"
   add_foreign_key "samples", "invites"
   add_foreign_key "samples", "shops"

@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       end
     end
     resources :products, only: %i[index new create show edit update]
+    resource  :moderation_preview, only: %i[create]
     resources :invites,     only: %i[index show]
     resources :samples,     only: %i[index show]
     resource  :tiktok_connection, only: %i[show create destroy]

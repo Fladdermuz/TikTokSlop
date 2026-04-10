@@ -1,0 +1,47 @@
+<% badge_class = {
+  "low"     => "bg-emerald-50 border-emerald-200 text-emerald-800",
+  "medium"  => "bg-amber-50 border-amber-200 text-amber-800",
+  "high"    => "bg-red-50 border-red-200 text-red-800",
+  "blocked" => "bg-red-100 border-red-300 text-red-900"
+}[result.risk] %>
+
+<div id="moderation_result" class="rounded-md border px-4 py-3 text-sm <%= badge_class %>">
+  <div class="flex items-center justify-between">
+    <div>
+      <span class="font-semibold uppercase tracking-wide">Risk: <%= result.risk %></span>
+      <% if result.issues.any? %>
+        <span class="ml-2 text-xs"><%= pluralize(result.issues.size, "issue") %></span>
+      <% end %>
+    </div>
+    <% if result.blocked? %>
+      <span class="rounded-full bg-red-200 px-2 py-0.5 text-xs font-semibold text-red-900">WILL NOT SEND</span>
+    <% end %>
+  </div>
+
+  <% if result.issues.any? %>
+    <ul class="mt-3 space-y-1.5">
+      <% result.issues.each do |issue| %>
+        <li>
+          <span class="inline-block rounded bg-white/60 px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide">
+            <%= issue[:severity] %>
+          </span>
+          <span class="ml-1 font-mono text-xs"><%= issue[:phrase] %></span>
+          <span class="ml-1 text-xs opacity-75">— <%= issue[:reason] || issue[:category] %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if result.suggested_rewrite.present? %>
+    <div class="mt-3 rounded border border-white/50 bg-white/80 p-3">
+      <div class="text-xs font-semibold uppercase tracking-wide">Suggested rewrite</div>
+      <p class="mt-1 whitespace-pre-wrap text-xs text-gray-800"><%= result.suggested_rewrite %></p>
+      <button type="button"
+              data-action="moderation#applyRewrite"
+              data-moderation-rewrite-value="<%= result.suggested_rewrite %>"
+              class="mt-2 rounded-md bg-gray-900 px-2 py-1 text-xs font-semibold text-white hover:bg-gray-700">
+        Apply rewrite
+      </button>
+    </div>
+  <% end %>
+</div>

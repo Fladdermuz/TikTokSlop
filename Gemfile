@@ -27,6 +27,9 @@ gem "faraday-retry", "~> 2.2"
 # Standard library that's leaving the default gems in Ruby 3.4
 gem "csv"
 
+# Anthropic Claude SDK — used for message moderation and AI-crafted outreach
+gem "anthropic", "~> 1.26"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

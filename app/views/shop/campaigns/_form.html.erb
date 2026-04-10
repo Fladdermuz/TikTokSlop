@@ -44,9 +44,19 @@
     </div>
   </div>
 
-  <div>
-    <%= f.label :message_template, "Message template", class: "block text-sm font-medium text-gray-700" %>
+  <div data-controller="moderation" data-moderation-url-value="<%= shop_moderation_preview_path %>">
+    <div class="flex items-center justify-between">
+      <%= f.label :message_template, "Message template", class: "block text-sm font-medium text-gray-700" %>
+      <% if editable.include?("message_template") %>
+        <button type="button"
+                data-action="moderation#runAiCheck"
+                class="rounded-md border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50">
+          Run AI moderation check
+        </button>
+      <% end %>
+    </div>
     <%= f.text_area :message_template, rows: 8, disabled: !editable.include?("message_template"),
+          data: { moderation_target: "textarea", action: "input->moderation#onInput" },
           placeholder: "Hey {{creator.handle}}! Love your {{creator.top_category}} content...",
           class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
     <div class="mt-2 text-xs text-gray-500">
@@ -55,6 +65,7 @@
         <code class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-gray-700"><%= "{{#{key}}}" %></code>
       <% end %>
     </div>
+    <div data-moderation-target="output" class="mt-3"></div>
   </div>
 
   <div>
