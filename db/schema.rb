@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_014257) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_023418) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,11 +22,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_014257) do
     t.string "name", null: false
     t.text "notes"
     t.string "product_external_id"
+    t.bigint "product_id", null: false
     t.boolean "sample_offer", default: false, null: false
     t.bigint "shop_id", null: false
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_campaigns_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["product_id"], name: "index_campaigns_on_product_id"
     t.index ["shop_id"], name: "index_campaigns_on_shop_id"
     t.index ["status"], name: "index_campaigns_on_status"
   end
@@ -88,6 +90,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_014257) do
     t.index ["shop_id"], name: "index_memberships_on_shop_id"
     t.index ["user_id", "shop_id"], name: "index_memberships_on_user_id_and_shop_id", unique: true
     t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "USD", null: false
+    t.string "external_id"
+    t.string "image_url"
+    t.string "name", null: false
+    t.bigint "price_cents", default: 0, null: false
+    t.jsonb "raw", default: {}, null: false
+    t.bigint "shop_id", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "synced_at"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "external_id"], name: "index_products_on_shop_id_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["shop_id", "status"], name: "index_products_on_shop_id_and_status"
+    t.index ["shop_id"], name: "index_products_on_shop_id"
   end
 
   create_table "samples", force: :cascade do |t|
@@ -157,12 +176,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_014257) do
     t.index ["platform_admin"], name: "index_users_on_platform_admin", where: "(platform_admin = true)"
   end
 
+  add_foreign_key "campaigns", "products"
   add_foreign_key "campaigns", "shops"
   add_foreign_key "invites", "campaigns"
   add_foreign_key "invites", "creators"
   add_foreign_key "invites", "shops"
   add_foreign_key "memberships", "shops"
   add_foreign_key "memberships", "users"
+  add_foreign_key "products", "shops"
   add_foreign_key "samples", "invites"
   add_foreign_key "samples", "shops"
   add_foreign_key "sessions", "users"

@@ -1,0 +1,24 @@
+<% if policy_for(campaign).update? %>
+  <% case campaign.status %>
+  <% when "draft" %>
+    <%= button_to "Activate", transition_shop_campaign_path(campaign, to: "active"),
+          method: :post,
+          class: "rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500" %>
+  <% when "active" %>
+    <%= button_to "Pause", transition_shop_campaign_path(campaign, to: "paused"),
+          method: :post,
+          class: "rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-700 hover:bg-amber-50" %>
+    <%= button_to "End", transition_shop_campaign_path(campaign, to: "ended"),
+          method: :post,
+          form: { data: { turbo_confirm: "End this campaign? This is permanent." } },
+          class: "rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50" %>
+  <% when "paused" %>
+    <%= button_to "Resume", transition_shop_campaign_path(campaign, to: "active"),
+          method: :post,
+          class: "rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500" %>
+    <%= button_to "End", transition_shop_campaign_path(campaign, to: "ended"),
+          method: :post,
+          form: { data: { turbo_confirm: "End this campaign? This is permanent." } },
+          class: "rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50" %>
+  <% end %>
+<% end %>

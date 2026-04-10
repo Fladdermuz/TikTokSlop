@@ -18,7 +18,12 @@ Rails.application.routes.draw do
         post :export
       end
     end
-    resources :campaigns
+    resources :campaigns do
+      member do
+        post :transition
+      end
+    end
+    resources :products, only: %i[index new create show edit update]
     resources :invites,     only: %i[index show]
     resources :samples,     only: %i[index show]
     resource  :tiktok_connection, only: %i[show create destroy]

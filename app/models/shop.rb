@@ -5,6 +5,7 @@ class Shop < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :users, through: :memberships
   has_one  :tiktok_token, dependent: :destroy
+  has_many :products, dependent: :restrict_with_error
   has_many :campaigns, dependent: :destroy
   has_many :invites, dependent: :destroy
   has_many :samples, dependent: :destroy

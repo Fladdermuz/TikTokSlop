@@ -4,18 +4,29 @@ class ShopScopedTest < ActiveSupport::TestCase
   setup do
     @alpha = shops(:alpha)
     @beta  = shops(:beta)
+
+    Current.shop = @alpha
+    @alpha_product = Product.create!(name: "Alpha Product", price_cents: 100, status: "active")
+    Current.shop = @beta
+    @beta_product = Product.create!(name: "Beta Product", price_cents: 100, status: "active")
+    Current.reset
   end
 
   teardown do
     Current.reset
   end
 
+  def new_campaign(name:)
+    product = Current.shop == @alpha ? @alpha_product : @beta_product
+    Campaign.create!(name: name, product: product)
+  end
+
   test "Campaign default_scope filters by Current.shop" do
     Current.shop = @alpha
-    a = Campaign.create!(name: "Alpha Q1")
+    a = new_campaign(name: "Alpha Q1")
 
     Current.shop = @beta
-    b = Campaign.create!(name: "Beta Spring")
+    b = new_campaign(name: "Beta Spring")
 
     Current.shop = @alpha
     visible = Campaign.pluck(:id)
@@ -28,15 +39,15 @@ class ShopScopedTest < ActiveSupport::TestCase
 
   test "Campaign auto-assigns Current.shop on create" do
     Current.shop = @alpha
-    c = Campaign.create!(name: "Auto")
+    c = new_campaign(name: "Auto")
     assert_equal @alpha.id, c.shop_id
   end
 
   test "for_shop bypasses default_scope explicitly" do
     Current.shop = @alpha
-    a = Campaign.create!(name: "Alpha")
+    a = new_campaign(name: "Alpha")
     Current.shop = @beta
-    b = Campaign.create!(name: "Beta")
+    b = new_campaign(name: "Beta")
 
     Current.shop = @alpha
     cross = Campaign.for_shop(@beta).pluck(:id)
@@ -45,9 +56,9 @@ class ShopScopedTest < ActiveSupport::TestCase
 
   test "cross_tenant scope returns rows from all shops" do
     Current.shop = @alpha
-    Campaign.create!(name: "A")
+    new_campaign(name: "A")
     Current.shop = @beta
-    Campaign.create!(name: "B")
+    new_campaign(name: "B")
 
     Current.shop = @alpha
     assert_equal 2, Campaign.cross_tenant.count
@@ -56,7 +67,7 @@ class ShopScopedTest < ActiveSupport::TestCase
 
   test "cross-tenant find raises ActiveRecord::RecordNotFound" do
     Current.shop = @alpha
-    a = Campaign.create!(name: "Alpha only")
+    a = new_campaign(name: "Alpha only")
 
     Current.shop = @beta
     assert_raises(ActiveRecord::RecordNotFound) do
@@ -65,13 +76,14 @@ class ShopScopedTest < ActiveSupport::TestCase
   end
 
   test "default_scope holds across joins and includes" do
-    Current.shop = @alpha
     creator = Creator.create!(external_id: "ext_1", handle: "alpha_creator")
-    campaign_a = Campaign.create!(name: "A")
+
+    Current.shop = @alpha
+    campaign_a = new_campaign(name: "A")
     invite_a = Invite.create!(creator: creator, campaign: campaign_a)
 
     Current.shop = @beta
-    campaign_b = Campaign.create!(name: "B")
+    campaign_b = new_campaign(name: "B")
     invite_b = Invite.create!(creator: creator, campaign: campaign_b)
 
     Current.shop = @alpha
@@ -83,15 +95,16 @@ class ShopScopedTest < ActiveSupport::TestCase
   end
 
   test "Sample also respects shop scoping" do
-    Current.shop = @alpha
     creator = Creator.create!(external_id: "ext_2", handle: "x")
-    campaign = Campaign.create!(name: "A camp")
+    creator2 = Creator.create!(external_id: "ext_3", handle: "y")
+
+    Current.shop = @alpha
+    campaign = new_campaign(name: "A camp")
     invite = Invite.create!(creator: creator, campaign: campaign)
     sample_a = Sample.create!(invite: invite)
 
     Current.shop = @beta
-    creator2 = Creator.create!(external_id: "ext_3", handle: "y")
-    campaign_b = Campaign.create!(name: "B camp")
+    campaign_b = new_campaign(name: "B camp")
     invite_b = Invite.create!(creator: creator2, campaign: campaign_b)
     sample_b = Sample.create!(invite: invite_b)
 
@@ -132,9 +145,9 @@ class ShopScopedTest < ActiveSupport::TestCase
 
   test "with no Current.shop set, default_scope is inert" do
     Current.shop = @alpha
-    Campaign.create!(name: "A")
+    new_campaign(name: "A")
     Current.shop = @beta
-    Campaign.create!(name: "B")
+    new_campaign(name: "B")
 
     Current.reset
     # Without Current.shop the where clause is skipped

@@ -1,0 +1,72 @@
+<%= form_with model: campaign, url: (campaign.persisted? ? shop_campaign_path(campaign) : shop_campaigns_path), class: "space-y-6 rounded-lg border border-gray-200 bg-white p-6" do |f| %>
+  <% if campaign.errors.any? %>
+    <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <%= campaign.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <% editable = local_assigns[:editable_fields] || %w[name product_id commission_rate sample_offer message_template notes] %>
+
+  <div>
+    <%= f.label :name, "Campaign name", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_field :name, required: true, disabled: !editable.include?("name"),
+          class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
+  </div>
+
+  <div>
+    <%= f.label :product_id, "Product", class: "block text-sm font-medium text-gray-700" %>
+    <% products = Current.shop.products.active.order(:name) %>
+    <% if products.any? %>
+      <%= f.collection_select :product_id, products, :id, :display_label,
+            { prompt: "Pick a product" },
+            { class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500",
+              disabled: !editable.include?("product_id") } %>
+    <% else %>
+      <p class="mt-1 text-sm text-amber-700">
+        You don't have any active products yet. <%= link_to "Add one →", new_shop_product_path, class: "underline" %>
+      </p>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :commission_rate, "Commission (0.0–1.0)", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :commission_rate, step: 0.01, min: 0, max: 1, disabled: !editable.include?("commission_rate"),
+            class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
+      <p class="mt-1 text-xs text-gray-500">e.g. 0.15 = 15%</p>
+    </div>
+    <div class="flex items-center">
+      <div class="mt-5 flex items-center gap-2">
+        <%= f.check_box :sample_offer, disabled: !editable.include?("sample_offer"),
+              class: "rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" %>
+        <%= f.label :sample_offer, "Offer free product sample", class: "text-sm text-gray-700" %>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :message_template, "Message template", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_area :message_template, rows: 8, disabled: !editable.include?("message_template"),
+          placeholder: "Hey {{creator.handle}}! Love your {{creator.top_category}} content...",
+          class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
+    <div class="mt-2 text-xs text-gray-500">
+      <span class="font-medium">Available variables:</span>
+      <% Messaging::TemplateRenderer.allowed_keys.each do |key| %>
+        <code class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-gray-700"><%= "{{#{key}}}" %></code>
+      <% end %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, "Internal notes", class: "block text-sm font-medium text-gray-700" %>
+    <%= f.text_area :notes, rows: 3, disabled: !editable.include?("notes"),
+          class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-500" %>
+  </div>
+
+  <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+    <%= link_to "Cancel", shop_campaigns_path, class: "text-sm text-gray-600 hover:text-gray-900" %>
+    <%= f.submit (campaign.persisted? ? "Save changes" : "Create campaign"),
+          class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 cursor-pointer",
+          disabled: products.empty? && !campaign.persisted? %>
+  </div>
+<% end %>

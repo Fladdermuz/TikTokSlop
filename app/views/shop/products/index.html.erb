@@ -1,0 +1,51 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Products</h1>
+      <p class="mt-1 text-sm text-gray-500">Products you can attach to campaigns. Sync from TikTok once connected, or add manually.</p>
+    </div>
+    <% if policy_for(Product).create? %>
+      <%= link_to "New product", new_shop_product_path, class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" %>
+    <% end %>
+  </div>
+
+  <% if @products.any? %>
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-4 py-3">Name</th>
+            <th class="px-4 py-3 text-right">Price</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">External ID</th>
+            <th class="px-4 py-3 text-right">Campaigns</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @products.each do |p| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">
+                <%= link_to p.name, shop_product_path(p), class: "font-medium text-gray-900 hover:text-indigo-600" %>
+              </td>
+              <td class="px-4 py-3 text-right tabular-nums">$<%= format("%.2f", p.price_dollars) %></td>
+              <td class="px-4 py-3 capitalize text-gray-700"><%= p.status %></td>
+              <td class="px-4 py-3 font-mono text-xs text-gray-500"><%= p.external_id || "—" %></td>
+              <td class="px-4 py-3 text-right tabular-nums"><%= p.campaigns.count %></td>
+              <td class="px-4 py-3 text-right">
+                <%= link_to "Edit", edit_shop_product_path(p), class: "text-sm text-indigo-600 hover:text-indigo-500" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+      <p class="text-sm text-gray-500">No products yet. Add one to start creating campaigns.</p>
+      <% if policy_for(Product).create? %>
+        <%= link_to "Add product", new_shop_product_path, class: "mt-4 inline-block rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
