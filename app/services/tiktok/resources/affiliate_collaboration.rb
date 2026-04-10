@@ -14,6 +14,7 @@
 #     - Search Target Collaborations (POST)
 #     - Query Target Collaboration Detail (POST)
 #     - Search Open Collaboration (POST)
+#     - Search Seller Affiliate Orders (POST) — track sales from affiliate collabs
 module Tiktok
   module Resources
     class AffiliateCollaboration
@@ -211,6 +212,34 @@ module Tiktok
         @client.post(
           "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/remove",
           { collaboration_id: collaboration_id },
+          shop_cipher: @shop_cipher
+        )
+      end
+
+      # ── Affiliate Order Tracking ─────────────────────────────────────────────
+
+      # POST /api/affiliate_seller/202405/orders/search
+      # Scope: seller.affiliate_collaboration.read
+      #
+      # Search orders generated through affiliate collaborations (both targeted
+      # and open). Use this to track which invites/collabs actually resulted in
+      # sales conversions.
+      #
+      # @param filters [Hash] search criteria, e.g.:
+      #   {
+      #     collaboration_id: "...",   # narrow to one collab
+      #     creator_id:       "...",   # narrow to one creator
+      #     start_time:       1700000000,  # Unix timestamp
+      #     end_time:         1700086400,
+      #     order_status:     "COMPLETED",
+      #     page_size:        20,
+      #     page_token:       "...",
+      #   }
+      # @return [Hash] raw response with order list and next_page_token
+      def search_affiliate_orders(filters: {})
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/orders/search",
+          filters,
           shop_cipher: @shop_cipher
         )
       end

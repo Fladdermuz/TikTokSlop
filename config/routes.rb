@@ -44,7 +44,8 @@ Rails.application.routes.draw do
   end
 
   namespace :tiktok do
-    get :callback, to: "oauth#callback"
+    get  :callback, to: "oauth#callback"
+    post :webhooks, to: "webhooks#receive"
   end
 
   namespace :admin do
