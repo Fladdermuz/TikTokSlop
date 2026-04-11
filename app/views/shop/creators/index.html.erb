@@ -26,6 +26,7 @@
           <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Engagement</th>
           <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Categories</th>
           <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Country</th>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Workload</th>
           <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500"></th>
         </tr>
       </thead>
@@ -60,6 +61,25 @@
             </td>
             <td class="px-4 py-3 text-gray-500"><%= creator.country %></td>
             <td class="px-4 py-3">
+              <% collabs = creator.active_collaboration_count %>
+              <% if collabs <= 3 %>
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                  Available
+                </span>
+              <% elsif collabs <= 7 %>
+                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20">
+                  <span class="h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+                  Moderate
+                </span>
+              <% else %>
+                <span class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+                  <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                  Busy
+                </span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
               <% if @invited_creator_ids.include?(creator.id) %>
                 <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">Invited</span>
               <% end %>
@@ -68,7 +88,7 @@
         <% end %>
         <% if @creators.empty? %>
           <tr>
-            <td colspan="8" class="px-4 py-12 text-center text-gray-500">
+            <td colspan="9" class="px-4 py-12 text-center text-gray-500">
               No creators match those filters. Try widening your range.
             </td>
           </tr>

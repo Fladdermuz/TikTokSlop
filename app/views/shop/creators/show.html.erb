@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 text-sm">
+    <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-5 text-sm">
       <div>
         <dt class="text-xs uppercase tracking-wide text-gray-500">GMV (30d)</dt>
         <dd class="mt-1 text-lg font-semibold text-gray-900">$<%= number_with_delimiter(@creator.gmv_dollars.to_i) %></dd>
@@ -35,6 +35,28 @@
       <div>
         <dt class="text-xs uppercase tracking-wide text-gray-500">Engagement</dt>
         <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_to_percentage((@creator.engagement_rate || 0) * 100, precision: 1) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Workload</dt>
+        <dd class="mt-1">
+          <% collabs = @creator.active_collaboration_count %>
+          <% if collabs <= 3 %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+              <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+              Available (<%= collabs %>)
+            </span>
+          <% elsif collabs <= 7 %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2.5 py-1 text-sm font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20">
+              <span class="h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+              Moderate (<%= collabs %>)
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+              <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+              Busy (<%= collabs %>)
+            </span>
+          <% end %>
+        </dd>
       </div>
     </dl>
   </div>
