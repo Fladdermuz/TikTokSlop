@@ -39,6 +39,53 @@
     </dl>
   </div>
 
+  <%# Showcase & Brand History %>
+  <% if @creator.showcase_products.any? || @creator.brand_partnerships.any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Showcase &amp; Brand History</h2>
+      <p class="mt-1 text-sm text-gray-500">Products this creator currently promotes and past brand partnerships.</p>
+
+      <%# Showcase Products grid %>
+      <% if @creator.showcase_products.any? %>
+        <h3 class="mt-5 text-sm font-medium text-gray-700">Showcase Products</h3>
+        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <% @creator.showcase_products.each do |product| %>
+            <div class="group rounded-lg border border-gray-100 bg-gray-50 p-3 hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
+              <div class="aspect-square overflow-hidden rounded-md bg-white">
+                <img
+                  src="<%= product["image_url"] %>"
+                  alt="<%= product["name"] %>"
+                  class="h-full w-full object-cover"
+                  onerror="this.src='https://placehold.co/200x200/f3f4f6/9ca3af?text=Product'"
+                >
+              </div>
+              <div class="mt-2">
+                <p class="truncate text-xs font-medium text-gray-800"><%= product["name"] %></p>
+                <p class="mt-0.5 text-xs text-indigo-600 font-semibold">$<%= sprintf("%.2f", product["price"].to_f) %></p>
+                <% if product["category"].present? %>
+                  <span class="mt-1 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500"><%= product["category"] %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Brand Partnerships %>
+      <% if @creator.brand_partnerships.any? %>
+        <h3 class="mt-6 text-sm font-medium text-gray-700">Brand Partnerships</h3>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <% @creator.brand_partnerships.each do |brand| %>
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700 shadow-sm">
+              <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+              <%= brand %>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="rounded-lg border border-gray-200 bg-white p-6">
     <h2 class="text-base font-semibold text-gray-900">Outreach history with <%= Current.shop.name %></h2>
     <% if @invites.any? %>

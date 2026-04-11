@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_135737) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_004307) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,6 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_135737) do
   create_table "creators", force: :cascade do |t|
     t.string "avatar_url"
     t.integer "avg_views", default: 0, null: false
+    t.jsonb "brand_partnerships", default: [], null: false
     t.string "categories", default: [], array: true
     t.string "country"
     t.datetime "created_at", null: false
@@ -65,6 +66,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_135737) do
     t.string "handle"
     t.datetime "last_seen_at"
     t.jsonb "raw", default: {}, null: false
+    t.jsonb "showcase_products", default: [], null: false
     t.datetime "updated_at", null: false
     t.index ["categories"], name: "index_creators_on_categories", using: :gin
     t.index ["external_id"], name: "index_creators_on_external_id", unique: true
