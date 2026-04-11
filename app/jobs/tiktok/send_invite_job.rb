@@ -45,6 +45,16 @@ class Tiktok::SendInviteJob < ApplicationJob
       raise Tiktok::RateLimitError.new("Per-shop invite rate limit exceeded")
     end
 
+    # 3b. Sample eligibility pre-check
+    send_sample = campaign.sample_offer?
+    if send_sample && shop.tiktok_connected?
+      sample_client = Tiktok::Resources::AffiliateSample.new(token: token, shop_cipher: token.shop_cipher)
+      unless sample_client.sample_eligible?(creator_id: creator.external_id, product_id: campaign.product.external_id)
+        Rails.logger.warn("[send invite] Creator #{creator.external_id} not eligible for sample on product #{campaign.product.external_id} — sending invite without sample offer")
+        send_sample = false
+      end
+    end
+
     # 4. Send via TikTok API
     invite.update!(status: "sending", message: message)
     collab = Tiktok::Resources::AffiliateCollaboration.new(token: token, shop_cipher: token.shop_cipher)
@@ -53,7 +63,7 @@ class Tiktok::SendInviteJob < ApplicationJob
       product_id:      campaign.product.external_id,
       commission_rate: campaign.commission_rate,
       message:         message,
-      sample_offer:    campaign.sample_offer?
+      sample_offer:    send_sample
     )
 
     # 5. Success

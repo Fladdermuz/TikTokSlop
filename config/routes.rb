@@ -37,10 +37,12 @@ Rails.application.routes.draw do
     resources :samples, only: %i[index show update] do
       member do
         post :record_spark_code
+        get  :deeplink
       end
     end
     resource  :tiktok_connection, only: %i[show create destroy]
     resources :members,     only: %i[index new create destroy]
+    resource  :roi, only: [:show], controller: "roi"
     resource  :finance, only: [:show], controller: "finance" do
       collection do
         get :payments

@@ -22,6 +22,48 @@
     </dl>
   </div>
 
+  <%# Sample Deeplink & QR Code section %>
+  <div class="rounded-lg border border-gray-200 bg-white p-6"
+       data-controller="sample-deeplink"
+       data-sample-deeplink-url-value="<%= deeplink_shop_sample_path(@sample) %>">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900">Sample Request Link</h2>
+        <p class="mt-1 text-sm text-gray-500">Generate a TikTok deeplink to the sample request page for this product. Share with the creator or display as a QR code.</p>
+      </div>
+      <button type="button"
+              data-action="click->sample-deeplink#generate"
+              data-sample-deeplink-target="button"
+              class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50">
+        Generate sample link
+      </button>
+    </div>
+
+    <div data-sample-deeplink-target="result" class="hidden mt-4 space-y-4">
+      <div class="flex items-center gap-3 rounded-md bg-indigo-50 px-4 py-3">
+        <a data-sample-deeplink-target="link" href="#" target="_blank" rel="noopener"
+           class="flex-1 break-all font-mono text-sm text-indigo-700 hover:underline"></a>
+        <button type="button"
+                data-action="click->sample-deeplink#copy"
+                class="shrink-0 rounded border border-indigo-300 bg-white px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50">
+          Copy
+        </button>
+      </div>
+      <div class="flex items-start gap-6">
+        <div>
+          <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">QR Code</p>
+          <img data-sample-deeplink-target="qr"
+               src=""
+               alt="QR code for sample request"
+               class="h-48 w-48 rounded-md border border-gray-200 bg-gray-50">
+        </div>
+        <p class="mt-6 text-xs text-gray-400">The creator can scan this QR code with their phone to go directly to the sample request page on TikTok.</p>
+      </div>
+    </div>
+
+    <div data-sample-deeplink-target="error" class="hidden mt-3 text-sm text-red-600"></div>
+  </div>
+
   <%# Spark Code section %>
   <div class="rounded-lg border border-gray-200 bg-white p-6">
     <h2 class="text-base font-semibold text-gray-900">Spark Ads Code</h2>

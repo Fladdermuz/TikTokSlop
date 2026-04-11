@@ -1,0 +1,81 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900">Creator ROI</h1>
+    <p class="mt-1 text-sm text-gray-500">Revenue and sales attributed to each creator from affiliate orders.</p>
+  </div>
+
+  <%# Summary Cards %>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Total Affiliate Revenue</dt>
+      <dd class="mt-2 text-2xl font-semibold text-gray-900">$<%= number_with_delimiter((@total_revenue / 100.0).round(2)) %></dd>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Total Orders</dt>
+      <dd class="mt-2 text-2xl font-semibold text-gray-900"><%= number_with_delimiter(@total_orders) %></dd>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Top Creator by Revenue</dt>
+      <dd class="mt-2 text-2xl font-semibold text-gray-900">
+        <% if @top_creator %>
+          <%= @top_creator[:display_name] %>
+          <span class="ml-2 text-sm font-normal text-gray-500">$<%= number_with_delimiter((@top_creator[:revenue] / 100.0).round(2)) %></span>
+        <% else %>
+          &mdash;
+        <% end %>
+      </dd>
+    </div>
+  </div>
+
+  <%# ROI Table %>
+  <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Creator</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Total Orders</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Total Revenue</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Samples Sent</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Acceptance Rate</th>
+          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">ROI</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @roi_data.each do |row| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <% if row[:creator] %>
+                <%= link_to row[:display_name], shop_creator_path(row[:creator]), class: "font-medium text-gray-900 hover:text-indigo-600" %>
+                <div class="text-xs text-gray-500">@<%= row[:handle] %></div>
+              <% else %>
+                <span class="font-medium text-gray-900"><%= row[:display_name] %></span>
+                <div class="text-xs text-gray-500">@<%= row[:handle] %></div>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= number_with_delimiter(row[:orders]) %></td>
+            <td class="px-4 py-3 text-right tabular-nums font-semibold text-gray-900">$<%= number_with_delimiter((row[:revenue] / 100.0).round(2)) %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= row[:samples_sent] %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= row[:acceptance_rate] %>%</td>
+            <td class="px-4 py-3 text-right tabular-nums">
+              <% if row[:roi] %>
+                <% roi_color = row[:roi] >= 5 ? "text-emerald-600" : row[:roi] >= 2 ? "text-yellow-600" : "text-red-600" %>
+                <span class="font-semibold <%= roi_color %>"><%= row[:roi] %>x</span>
+              <% else %>
+                <span class="text-gray-400">&mdash;</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @roi_data.empty? %>
+          <tr>
+            <td colspan="6" class="px-4 py-12 text-center text-gray-500">
+              No affiliate order data yet. Send invites to creators and track their performance here.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-xs text-gray-400">Sample cost estimated at $25 per sample. Real order data will be populated from the TikTok affiliate orders API.</p>
+</div>

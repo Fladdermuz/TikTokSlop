@@ -154,6 +154,61 @@
     </div>
   <% end %>
 
+  <%# Recent Sample Activity %>
+  <% if Array(@creator.recent_sample_requests).any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Recent Sample Activity</h2>
+      <p class="mt-1 text-sm text-gray-500">Products this creator has recently requested samples for from other sellers — a signal of active category interest.</p>
+      <ul class="mt-4 divide-y divide-gray-100">
+        <% Array(@creator.recent_sample_requests).each do |req| %>
+          <li class="flex items-center justify-between py-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-gray-900"><%= req["product_name"] %></p>
+              <p class="mt-0.5 text-xs text-gray-500"><%= req["seller_name"] %> &middot; Requested <%= req["request_date"] %></p>
+            </div>
+            <% status = req["status"]
+               badge = case status
+                 when "approved"  then "bg-blue-50 text-blue-700 ring-blue-600/20"
+                 when "received"  then "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                 when "pending"   then "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
+                 else                  "bg-gray-100 text-gray-600 ring-gray-500/20"
+               end %>
+            <span class="ml-4 inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset <%= badge %>">
+              <%= status&.capitalize %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Recommended Products %>
+  <% if Array(@creator.recommended_products).any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Recommended Products</h2>
+      <p class="mt-1 text-sm text-gray-500">TikTok's algorithm predicts which of your products this creator would best promote, based on their audience and content style.</p>
+      <ul class="mt-4 space-y-3">
+        <% Array(@creator.recommended_products).sort_by { |p| -(p["match_score"] || 0) }.each do |rec| %>
+          <% score = rec["match_score"].to_f
+             bar_pct = (score * 100).round
+             bar_color = score >= 0.8 ? "bg-emerald-500" : score >= 0.6 ? "bg-indigo-500" : "bg-amber-400" %>
+          <li class="flex items-center gap-4">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-900"><%= rec["product_name"] %></p>
+              <% if rec["reason"].present? %>
+                <p class="mt-0.5 text-xs text-gray-500"><%= rec["reason"] %></p>
+              <% end %>
+              <div class="mt-1.5 h-1.5 w-full rounded-full bg-gray-100">
+                <div class="h-1.5 rounded-full <%= bar_color %>" style="width: <%= bar_pct %>%"></div>
+              </div>
+            </div>
+            <span class="shrink-0 text-sm font-semibold text-gray-700"><%= bar_pct %>%</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="rounded-lg border border-gray-200 bg-white p-6">
     <h2 class="text-base font-semibold text-gray-900">Outreach history with <%= Current.shop.name %></h2>
     <% if @invites.any? %>

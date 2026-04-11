@@ -1,8 +1,9 @@
 <nav class="border-b border-gray-200 bg-white">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
     <div class="flex items-center gap-8">
-      <%= link_to root_path, class: "text-xl font-semibold tracking-tight text-gray-900" do %>
-        Tikedon
+      <%= link_to root_path, class: "flex items-center gap-2" do %>
+        <img src="/icon.png" alt="Tikedon" class="h-8 w-8 rounded">
+        <span class="text-xl font-semibold tracking-tight text-gray-900">Tikedon</span>
       <% end %>
 
       <% if Current.shop %>
@@ -13,6 +14,7 @@
           <%= link_to "Campaigns", shop_campaigns_path, class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
           <%= link_to "Invites",   shop_invites_path,   class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
           <%= link_to "Samples",   shop_samples_path,   class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
+          <%= link_to "ROI",      shop_roi_path,       class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
           <%= link_to "Finance",  shop_finance_path,   class: "text-sm font-medium text-gray-700 hover:text-gray-900" %>
         </div>
       <% end %>

@@ -1,5 +1,5 @@
 class Shop::SamplesController < Shop::BaseController
-  before_action :set_sample, only: %i[show update record_spark_code]
+  before_action :set_sample, only: %i[show update record_spark_code deeplink]
 
   def index
     authorize!(:index, Sample)
@@ -38,6 +38,34 @@ class Shop::SamplesController < Shop::BaseController
     else
       redirect_to shop_sample_path(@sample), alert: "Unknown transition."
     end
+  end
+
+  # GET /shop/samples/:id/deeplink
+  # Calls the TikTok AffiliateSample deeplink endpoint and returns the URL as JSON.
+  # Falls back to a realistic-looking stub when no TikTok token is connected.
+  def deeplink
+    authorize!(:show, @sample)
+    @invite  = @sample.invite
+    @campaign = @invite.campaign
+    product  = @campaign.product
+
+    url = nil
+
+    if (token = Current.shop.tiktok_token)
+      resource = Tiktok::Resources::AffiliateSample.new(
+        token:       token.access_token,
+        shop_cipher: token.shop_cipher
+      )
+      url = resource.deeplink(product_id: product.external_id)
+    end
+
+    # Graceful fallback — stub a realistic-looking deeplink so the UI always
+    # shows something even without a live TikTok connection.
+    url ||= "https://www.tiktok.com/shop/sample-request?product_id=#{product.external_id || product.id}&shop_id=#{Current.shop.slug}"
+
+    render json: { url: url }
+  rescue => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   # POST /shop/samples/:id/record_spark_code

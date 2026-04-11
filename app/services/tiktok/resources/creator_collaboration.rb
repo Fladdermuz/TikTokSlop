@@ -55,6 +55,23 @@ module Tiktok
         )
       end
 
+      # POST /api/creator/202405/affiliate_products/select
+      # Scope: creator.affiliate_collaboration.read (Creator Select Affiliate Product)
+      #
+      # Ask TikTok's algorithm which of the seller's products this creator would
+      # best promote. Returns a ranked list of product recommendations with
+      # match scores.
+      #
+      # @param creator_id [String]  TikTok external creator ID
+      # @return [Hash] raw response with ranked product list and match scores
+      def recommended_products(creator_id:)
+        @client.post(
+          "/api/creator/#{ENDPOINT_VERSION}/affiliate_products/select",
+          { creator_id: creator_id },
+          shop_cipher: @shop_cipher
+        )
+      end
+
       # Parse a raw collaboration hash from the API into a typed struct.
       #
       # @param hash [Hash] single collab entry from the API response

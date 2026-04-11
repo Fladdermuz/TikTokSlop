@@ -91,6 +91,28 @@ module Tiktok
         body.dig("data", "deeplink") || body.dig("data", "url")
       end
 
+      # POST /api/affiliate_seller/202405/sample_applications/eligibility/check
+      # Scope: seller.affiliate_collaboration.read
+      #
+      # Check whether a creator is eligible to receive a product sample.
+      # Used as a pre-check before sending invites with sample offers.
+      #
+      # @param creator_id [String] TikTok external creator ID
+      # @param product_id [String] TikTok external product ID
+      # @return [Boolean] true if the creator can receive a sample
+      def sample_eligible?(creator_id:, product_id:)
+        resp = @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/sample_applications/eligibility/check",
+          { creator_id: creator_id, product_id: product_id },
+          shop_cipher: @shop_cipher
+        )
+        resp.dig("data", "eligible") == true
+      rescue Tiktok::Error => e
+        Rails.logger.warn("[sample_eligible?] TikTok API error for creator=#{creator_id} product=#{product_id}: #{e.message}")
+        # Fail open — don't block invite on eligibility check failures
+        true
+      end
+
       private
 
       def build_search_body(filters)
