@@ -86,6 +86,74 @@
     </div>
   <% end %>
 
+  <%# Affiliate Collaboration History %>
+  <% if Array(@creator.collaboration_history).any? %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Affiliate Collaboration History</h2>
+      <p class="mt-1 text-sm text-gray-500">Past and active affiliate collaborations this creator has participated in across TikTok Shop sellers.</p>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-100">
+            <tr>
+              <th class="pb-2 pr-4">Seller / Brand</th>
+              <th class="pb-2 pr-4">Product</th>
+              <th class="pb-2 pr-4">Commission</th>
+              <th class="pb-2 pr-4">Status</th>
+              <th class="pb-2 pr-4">Date Range</th>
+              <th class="pb-2">Content Views</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% Array(@creator.collaboration_history).each do |collab| %>
+              <tr>
+                <td class="py-3 pr-4 font-medium text-gray-800"><%= collab["seller_name"] %></td>
+                <td class="py-3 pr-4 text-gray-700 max-w-[200px]">
+                  <span class="block truncate"><%= collab["product_name"] %></span>
+                </td>
+                <td class="py-3 pr-4 font-semibold text-indigo-600"><%= collab["commission_rate"] %>%</td>
+                <td class="py-3 pr-4">
+                  <% status = collab["status"] %>
+                  <% badge_class = case status
+                    when "active"    then "bg-green-50 text-green-700 ring-green-600/20"
+                    when "completed" then "bg-gray-100 text-gray-600 ring-gray-500/20"
+                    when "expired"   then "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
+                    else                  "bg-gray-100 text-gray-600 ring-gray-500/20"
+                    end %>
+                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset <%= badge_class %>">
+                    <%= status&.capitalize %>
+                  </span>
+                </td>
+                <td class="py-3 pr-4 text-gray-500 whitespace-nowrap">
+                  <% start_d = collab["start_date"]
+                     end_d   = collab["end_date"] %>
+                  <% if start_d.present? %>
+                    <%= Date.parse(start_d.to_s).strftime("%b %-d, %Y") rescue start_d %>
+                    <% if end_d.present? %>
+                      &ndash; <%= Date.parse(end_d.to_s).strftime("%b %-d, %Y") rescue end_d %>
+                    <% end %>
+                  <% else %>
+                    &mdash;
+                  <% end %>
+                </td>
+                <td class="py-3 text-gray-700">
+                  <% views = collab["content_views"].to_i %>
+                  <% if views >= 1_000_000 %>
+                    <%= number_with_precision(views.to_f / 1_000_000, precision: 1) %>M
+                  <% elsif views >= 1_000 %>
+                    <%= number_with_precision(views.to_f / 1_000, precision: 1) %>K
+                  <% else %>
+                    <%= views %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
   <div class="rounded-lg border border-gray-200 bg-white p-6">
     <h2 class="text-base font-semibold text-gray-900">Outreach history with <%= Current.shop.name %></h2>
     <% if @invites.any? %>

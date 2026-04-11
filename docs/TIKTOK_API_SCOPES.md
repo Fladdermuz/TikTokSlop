@@ -192,7 +192,7 @@ Everything else (Global Product CRUD, Promotions, Partner TAP Campaigns, Showcas
   - Get Affiliate Partner Campaign List — list campaigns created by the affiliate partner.
   - Get Affiliate Partner Campaign Product List — products submitted by sellers in a campaign.
   - Partner Generate Multi Affiliate Campaign Product Link — generate promotion links for multiple products in a campaign.
-  - Search Tap Affiliate Orders — retrieve affiliate orders and track conversions. *Deprecating 2026-06-30.*
+  - Search Tap Affiliate Orders — retrieve affiliate orders and track conversions. *DEPRECATING 2026-06-30 — no data returned after that date. Need to find replacement before then.*
 
 ### Read Creator Marketplace
 - **Scope ID**: 925572
