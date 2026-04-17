@@ -28,7 +28,7 @@ gem "faraday-retry", "~> 2.2"
 gem "csv"
 
 # Anthropic Claude SDK — used for message moderation and AI-crafted outreach
-gem "anthropic", "~> 1.26"
+gem "anthropic", "~> 1.35"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
