@@ -55,22 +55,26 @@ class Tiktok::SendInviteJob < ApplicationJob
       end
     end
 
-    # 4. Send via TikTok API
+    # 4. Pick commission rate (honoring A/B test split if enabled)
+    commission_rate, cohort = campaign.assign_commission
+
+    # 5. Send via TikTok API
     invite.update!(status: "sending", message: message)
     collab = Tiktok::Resources::AffiliateCollaboration.new(token: token, shop_cipher: token.shop_cipher)
     external_id = collab.create_targeted(
       creator_id:      creator.external_id,
       product_id:      campaign.product.external_id,
-      commission_rate: campaign.commission_rate,
+      commission_rate: commission_rate,
       message:         message,
       sample_offer:    send_sample
     )
 
-    # 5. Success
+    # 6. Success
     invite.update!(
       status: "sent",
       external_id: external_id,
-      sent_at: Time.current
+      sent_at: Time.current,
+      raw: invite.raw.merge("cohort" => cohort, "commission_rate_sent" => commission_rate)
     )
     limiter.record!
 

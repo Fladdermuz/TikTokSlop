@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_12_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_220014) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,21 +30,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_000001) do
   end
 
   create_table "campaigns", force: :cascade do |t|
+    t.boolean "ab_test_enabled", default: false, null: false
+    t.integer "cohort_b_split_pct", default: 50, null: false
     t.decimal "commission_rate", precision: 6, scale: 4
+    t.decimal "commission_rate_b", precision: 6, scale: 4
     t.datetime "created_at", null: false
     t.string "external_id"
     t.text "follow_up_template"
+    t.integer "max_samples_per_creator"
     t.text "message_template"
+    t.string "mode", default: "target", null: false
     t.string "name", null: false
     t.text "notes"
     t.boolean "personalize_per_creator", default: false, null: false
     t.string "product_external_id"
     t.bigint "product_id", null: false
+    t.integer "sample_min_follower_threshold"
     t.boolean "sample_offer", default: false, null: false
+    t.integer "sample_valid_days"
     t.bigint "shop_id", null: false
     t.string "status", default: "draft", null: false
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_campaigns_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["mode"], name: "index_campaigns_on_mode"
     t.index ["product_id"], name: "index_campaigns_on_product_id"
     t.index ["shop_id"], name: "index_campaigns_on_shop_id"
     t.index ["status"], name: "index_campaigns_on_status"
@@ -211,6 +219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_000001) do
   create_table "shops", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.boolean "open_collab_auto_add", default: false, null: false
+    t.decimal "open_collab_default_commission_rate", precision: 6, scale: 4
     t.string "plan", default: "free", null: false
     t.string "slug", null: false
     t.string "status", default: "active", null: false

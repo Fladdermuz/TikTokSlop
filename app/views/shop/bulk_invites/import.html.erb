@@ -1,0 +1,43 @@
+<div class="mx-auto max-w-2xl space-y-6">
+  <div>
+    <%= link_to "← Back to campaigns", shop_campaigns_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">Import creators from CSV</h1>
+    <p class="mt-1 text-sm text-gray-500">Upload a CSV with one TikTok creator handle per line. Each known creator will receive a Target Collaboration invite for the selected campaign.</p>
+  </div>
+
+  <% if @campaigns.empty? %>
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <h2 class="font-semibold text-amber-900">No active campaigns</h2>
+      <p class="mt-1 text-sm text-amber-800">Activate a campaign before importing invites.</p>
+      <%= link_to "Go to campaigns", shop_campaigns_path, class: "mt-3 inline-block rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-500" %>
+    </div>
+  <% else %>
+    <%= form_with url: import_csv_shop_bulk_invites_path, method: :post, multipart: true, class: "space-y-5 rounded-lg border border-gray-200 bg-white p-6" do |f| %>
+      <div>
+        <%= f.label :campaign_id, "Campaign", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.collection_select :campaign_id, @campaigns, :id, :name, {},
+              class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :csv_file, "CSV file", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.file_field :csv_file, accept: ".csv,text/csv",
+              class: "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+        <p class="mt-2 text-xs text-gray-500">One handle per line. Header row "handle" is optional. The leading @ is stripped if present.</p>
+      </div>
+
+      <div class="rounded-md bg-gray-50 p-3">
+        <p class="text-xs font-medium text-gray-700">Example CSV content:</p>
+        <pre class="mt-1 font-mono text-xs text-gray-600">handle
+supplement_sarah
+@healthwithmike
+fitnessjourneyluna</pre>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+        <%= link_to "Cancel", shop_campaigns_path, class: "text-sm text-gray-600" %>
+        <%= f.submit "Import and queue invites", class: "rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 cursor-pointer" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

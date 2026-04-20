@@ -19,6 +19,30 @@
       <dt class="text-gray-500">External ID</dt><dd class="font-mono text-xs text-gray-500"><%= @invite.external_id || "—" %></dd>
       <dt class="text-gray-500">Retries</dt><dd class="text-gray-900"><%= @invite.retry_count %></dd>
     </dl>
+
+    <% if @invite.external_id.present? && !@invite.failed? %>
+      <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-200 pt-4">
+        <%= button_to "Generate share link", generate_link_shop_invite_path(@invite), method: :post,
+              class: "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+
+        <% if @invite.raw["share_link"].present? %>
+          <code class="flex-1 truncate rounded bg-gray-50 px-2 py-1 text-xs text-gray-700"><%= @invite.raw["share_link"] %></code>
+        <% end %>
+      </div>
+
+      <% if @invite.status.in?(%w[sent expired]) %>
+        <div class="mt-3 rounded-md border border-indigo-100 bg-indigo-50 p-3">
+          <h3 class="text-sm font-semibold text-indigo-900">Reinvite at a different commission</h3>
+          <p class="mt-0.5 text-xs text-indigo-800">Cancels the current TikTok collaboration and creates a new one at the specified rate.</p>
+          <%= form_with url: reinvite_shop_invite_path(@invite), method: :post, class: "mt-2 flex items-center gap-2" do |f| %>
+            <%= f.number_field :commission_rate, step: 0.01, min: 0.01, max: 1, placeholder: "0.25",
+                  class: "w-24 rounded-md border-gray-300 px-2 py-1 text-sm" %>
+            <span class="text-xs text-indigo-700">(0.25 = 25%)</span>
+            <%= f.submit "Reinvite", class: "rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 
   <% if @invite.message.present? %>

@@ -5,7 +5,7 @@
     </div>
   <% end %>
 
-  <% editable = local_assigns[:editable_fields] || %w[name product_id commission_rate sample_offer message_template notes] %>
+  <% editable = local_assigns[:editable_fields] || %w[name product_id commission_rate sample_offer message_template notes mode] %>
 
   <div>
     <%= f.label :name, "Campaign name", class: "block text-sm font-medium text-gray-700" %>
@@ -26,6 +26,26 @@
         You don't have any active products yet. <%= link_to "Add one →", new_shop_product_path, class: "underline" %>
       </p>
     <% end %>
+  </div>
+
+  <div>
+    <%= f.label :mode, "Collaboration mode", class: "block text-sm font-medium text-gray-700" %>
+    <div class="mt-2 grid grid-cols-2 gap-3">
+      <label class="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 hover:bg-gray-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+        <%= f.radio_button :mode, "target", disabled: !editable.include?("mode"), class: "mt-0.5" %>
+        <div>
+          <div class="text-sm font-medium text-gray-900">Target</div>
+          <div class="text-xs text-gray-500">Private invite-only. You pick specific creators and send them individual collaboration offers.</div>
+        </div>
+      </label>
+      <label class="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 hover:bg-gray-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+        <%= f.radio_button :mode, "open", disabled: !editable.include?("mode"), class: "mt-0.5" %>
+        <div>
+          <div class="text-sm font-medium text-gray-900">Open</div>
+          <div class="text-xs text-gray-500">Listed in Creator Marketplace. Any eligible creator can join at the set commission rate.</div>
+        </div>
+      </label>
+    </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
@@ -77,6 +97,58 @@
     </div>
     <div data-moderation-target="output" class="mt-3"></div>
   </div>
+
+  <div class="rounded-md border border-amber-100 bg-amber-50 p-4">
+    <div class="flex items-start gap-3">
+      <%= f.check_box :ab_test_enabled, disabled: !editable.include?("ab_test_enabled"),
+            class: "mt-1 rounded border-gray-300 text-amber-600" %>
+      <div class="flex-1">
+        <%= f.label :ab_test_enabled, "Enable commission A/B test", class: "block text-sm font-medium text-amber-900" %>
+        <p class="mt-0.5 text-xs text-amber-800">Split creators into two cohorts at different commission rates to measure the impact on acceptance and conversion.</p>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :commission_rate_b, "Cohort B rate (0.0–1.0)", class: "block text-xs font-medium text-amber-900" %>
+            <%= f.number_field :commission_rate_b, step: 0.01, min: 0, max: 1, disabled: !editable.include?("commission_rate_b"),
+                  placeholder: "0.20",
+                  class: "mt-1 block w-full rounded-md border border-amber-200 px-2 py-1 text-sm disabled:bg-gray-50" %>
+          </div>
+          <div>
+            <%= f.label :cohort_b_split_pct, "Cohort B split (%)", class: "block text-xs font-medium text-amber-900" %>
+            <%= f.number_field :cohort_b_split_pct, min: 0, max: 100, step: 1, disabled: !editable.include?("cohort_b_split_pct"),
+                  placeholder: "50",
+                  class: "mt-1 block w-full rounded-md border border-amber-200 px-2 py-1 text-sm disabled:bg-gray-50" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if campaign.sample_offer? %>
+    <div class="rounded-md border border-indigo-100 bg-indigo-50 p-4">
+      <h3 class="text-sm font-semibold text-indigo-900">Sample rules</h3>
+      <p class="mt-0.5 text-xs text-indigo-800">Controls how creators request samples in this campaign. For open-mode campaigns these are pushed to TikTok via the Edit Open Collaboration Sample Rule API.</p>
+      <div class="mt-3 grid grid-cols-3 gap-3">
+        <div>
+          <%= f.label :max_samples_per_creator, "Max samples per creator", class: "block text-xs font-medium text-indigo-900" %>
+          <%= f.number_field :max_samples_per_creator, min: 1, disabled: !editable.include?("max_samples_per_creator"),
+                placeholder: "1",
+                class: "mt-1 block w-full rounded-md border border-indigo-200 px-2 py-1 text-sm disabled:bg-gray-50" %>
+        </div>
+        <div>
+          <%= f.label :sample_valid_days, "Validity window (days)", class: "block text-xs font-medium text-indigo-900" %>
+          <%= f.number_field :sample_valid_days, min: 1, disabled: !editable.include?("sample_valid_days"),
+                placeholder: "30",
+                class: "mt-1 block w-full rounded-md border border-indigo-200 px-2 py-1 text-sm disabled:bg-gray-50" %>
+        </div>
+        <div>
+          <%= f.label :sample_min_follower_threshold, "Min creator followers", class: "block text-xs font-medium text-indigo-900" %>
+          <%= f.number_field :sample_min_follower_threshold, min: 0, step: 1000, disabled: !editable.include?("sample_min_follower_threshold"),
+                placeholder: "10000",
+                class: "mt-1 block w-full rounded-md border border-indigo-200 px-2 py-1 text-sm disabled:bg-gray-50" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <div>
     <%= f.label :follow_up_template, "Spark Code follow-up template", class: "block text-sm font-medium text-gray-700" %>

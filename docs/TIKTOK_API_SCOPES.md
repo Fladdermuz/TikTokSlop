@@ -20,15 +20,12 @@
 | 11 | Read Seller Affiliate Collaboration | 733764 | `seller.affiliate_collaboration.read` | Under review | Read collab status, samples, orders |
 | 12 | Shop Authorized Information | 431812 | `seller.authorization.info` | Awaiting submission | OAuth flow, webhooks |
 | 13 | TikTok Shop Analytics | 948484 | `data.shop_analytics.public.read` | Awaiting submission | Shop/product/video/LIVE performance metrics |
-| 14 | Manage Affiliate Partner Campaigns | 733444 | `partner.tap_campaign.write` | Under review | Create/edit/publish TAP campaigns |
-| 15 | Manage Affiliate Partner Campaign Products | 733572 | `partner.tap_campaign.product.write` | Awaiting submission | Review products submitted to TAP campaigns |
-| 16 | Read Affiliate Partner Campaigns | 733508 | `partner.tap_campaign.read` | Under review | Read campaign performance/fulfillment/orders |
-| 17 | Read Creator Affiliate Collaborations | 1021508 | `creator.affiliate_collaboration.read` | Under review | Creator collab history, sample apps, affiliate orders |
-| 18 | Read Showcase Products | 791236 | `creator.showcase.read` | Under review | Creator showcase product list |
+| 14 | Read Creator Affiliate Collaborations | 1021508 | `creator.affiliate_collaboration.read` | Under review | Creator collab history, sample apps, affiliate orders |
+| 15 | Read Showcase Products | 791236 | `creator.showcase.read` | Under review | Creator showcase product list |
 
 ## Skipped Scopes
 
-Everything else (Global Product CRUD, Promotions, Partner TAP Campaigns, Showcase, FBT, Package Split, External Order References, Delivery Status Write, Product Optimization, Image Translation, Redeem Info).
+Everything else (Global Product CRUD, Promotions, all Partner/TAP scopes — we are a seller not a partner —, FBT, Package Split, External Order References, Delivery Status Write, Product Optimization, Image Translation, Redeem Info).
 
 ## Scope Details (updated as we activate each one)
 
@@ -179,22 +176,6 @@ Everything else (Global Product CRUD, Promotions, Partner TAP Campaigns, Showcas
   - Search Products — list products by conditions, returns key properties.
   - Upload Product File — upload PDF/video for product listings.
   - Upload Product Image — upload images for product use.
-
-### Read Affiliate Partner Campaigns
-- **Scope ID**: 733508
-- **Scope Key**: `partner.tap_campaign.read`
-- **Status**: Under review
-- **Used by**: Campaign analytics dashboard, performance tracking
-- **Endpoints**:
-  - Get Affiliate Campaign Creator Fulfillment Status Info — product fulfillment status for creators who added campaign products to showcase.
-  - Get Affiliate Campaign Creator Fulfillment Status List — fulfillment status list across creators in a campaign.
-  - Get Affiliate Campaign Creator Product Content Statistics — statistics on creator's marketing video content.
-  - Get Affiliate Campaign Creator Product Sample Status — progress on creator's sample status.
-  - Get Affiliate Partner Campaign Detail — campaign details.
-  - Get Affiliate Partner Campaign List — list campaigns created by the affiliate partner.
-  - Get Affiliate Partner Campaign Product List — products submitted by sellers in a campaign.
-  - Partner Generate Multi Affiliate Campaign Product Link — generate promotion links for multiple products in a campaign.
-  - Search Tap Affiliate Orders — retrieve affiliate orders and track conversions. *DEPRECATING 2026-06-30 — no data returned after that date. Need to find replacement before then.*
 
 ### Read Creator Marketplace
 - **Scope ID**: 925572

@@ -203,15 +203,6 @@ POST unless noted otherwise. All shop-scoped endpoints require `shop_cipher` as 
 | Search Products | `/api/products/202309/search` | POST |
 | Get Product | `/api/products/202309/products/{product_id}` | GET |
 
-### TAP Campaigns — `partner.tap_campaign.write` + `.read`
-| Endpoint | Path | Scope |
-|---|---|---|
-| Create Affiliate Partner Campaign | `/api/affiliate_partner/202405/campaigns/create` | write |
-| Publish Affiliate Partner Campaign | `/api/affiliate_partner/202405/campaigns/publish` | write |
-| Get Affiliate Partner Campaign Detail | `/api/affiliate_partner/202405/campaigns/get` | read |
-| Get Affiliate Partner Campaign List | `/api/affiliate_partner/202405/campaigns/list` | read |
-| Get Affiliate Partner Campaign Product List | `/api/affiliate_partner/202405/campaigns/products/list` | read |
-
 ## Things still TBD
 
 - Shape of the targeted collaboration request body (varies by 2024xx vs 2025xx version)

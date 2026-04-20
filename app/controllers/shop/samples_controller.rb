@@ -18,6 +18,10 @@ class Shop::SamplesController < Shop::BaseController
   def update
     authorize!(:update, @sample)
     case params[:transition]
+    when "approved"
+      push_tiktok_review(action: "approve")
+      @sample.update!(status: "approved")
+      redirect_to shop_sample_path(@sample), notice: "Sample approved."
     when "shipped"
       @sample.update!(status: "shipped", shipped_at: Time.current,
                        tracking_number: params[:tracking_number], carrier: params[:carrier])
@@ -27,7 +31,12 @@ class Shop::SamplesController < Shop::BaseController
       @sample.on_delivery!
       redirect_to shop_sample_path(@sample), notice: "Marked as delivered. Follow-up scheduled."
     when "rejected"
-      @sample.update!(status: "rejected")
+      reason = params[:reject_reason].to_s.strip
+      if reason.blank?
+        redirect_to shop_sample_path(@sample), alert: "A rejection reason is required (TikTok requires this when rejecting sample applications)." and return
+      end
+      push_tiktok_review(action: "reject", reject_reason: reason)
+      @sample.update!(status: "rejected", raw: @sample.raw.merge("reject_reason" => reason, "rejected_at" => Time.current.iso8601))
       redirect_to shop_sample_path(@sample), notice: "Sample rejected."
     when "returned"
       @sample.update!(status: "returned")
@@ -84,5 +93,20 @@ class Shop::SamplesController < Shop::BaseController
 
   def set_sample
     @sample = Current.shop.samples.find(params[:id])
+  end
+
+  # Call TikTok's Seller Review Sample Applications endpoint if we have a
+  # TikTok connection and a known external sample_application_id. Fails
+  # silently (logs only) so local state updates still proceed if TikTok is
+  # unreachable — local DB is the source of truth for our UI.
+  def push_tiktok_review(action:, reject_reason: nil)
+    return if @sample.external_id.blank?
+    token = Current.shop.tiktok_token
+    return unless token
+
+    Tiktok::Resources::AffiliateSample.new(token: token.access_token, shop_cipher: token.shop_cipher)
+      .review(sample_application_id: @sample.external_id, action: action, reject_reason: reject_reason)
+  rescue Tiktok::Error => e
+    Rails.logger.warn("[samples#review] TikTok push failed sample=#{@sample.id}: #{e.message}")
   end
 end

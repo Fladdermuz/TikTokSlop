@@ -216,6 +216,23 @@ module Tiktok
         )
       end
 
+      # POST /api/affiliate_seller/202405/open_collaborations/creators/remove
+      # Scope: seller.affiliate_collaboration.write
+      #
+      # Remove a creator from an open collaboration. Note: creators can rejoin
+      # after removal, so this may need to be called again.
+      #
+      # @param collaboration_id [String]
+      # @param creator_id [String]
+      # @return [Hash] raw response
+      def remove_creator_from_open(collaboration_id:, creator_id:)
+        @client.post(
+          "/api/affiliate_seller/#{ENDPOINT_VERSION}/open_collaborations/creators/remove",
+          { collaboration_id: collaboration_id, creator_id: creator_id },
+          shop_cipher: @shop_cipher
+        )
+      end
+
       # ── Affiliate Order Tracking ─────────────────────────────────────────────
 
       # POST /api/affiliate_seller/202405/orders/search

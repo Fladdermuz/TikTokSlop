@@ -31,9 +31,16 @@ Rails.application.routes.draw do
     resources :invites, only: %i[index show] do
       member do
         post :retry_send
+        post :generate_link
+        post :reinvite
       end
     end
-    resources :bulk_invites, only: %i[new create]
+    resources :bulk_invites, only: %i[new create] do
+      collection do
+        get  :import
+        post :import_csv
+      end
+    end
     resources :samples, only: %i[index show update] do
       member do
         post :record_spark_code
@@ -41,6 +48,7 @@ Rails.application.routes.draw do
       end
     end
     resource  :tiktok_connection, only: %i[show create destroy]
+    resource  :open_collab_settings, only: %i[show update]
     resources :members,     only: %i[index new create destroy]
     resource  :roi, only: [:show], controller: "roi"
     resource  :finance, only: [:show], controller: "finance" do
