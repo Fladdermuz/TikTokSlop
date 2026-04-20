@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -eo pipefail
+cd /var/www/tikedon.com
+source /usr/local/rvm/scripts/rvm
+rvm use 3.3.6
+export RAILS_ENV=production
+
+echo "[deploy] pulling..."
+git fetch --all
+git reset --hard origin/main
+
+echo "[deploy] bundling..."
+bundle config set --local deployment true
+bundle config set --local without "development test"
+bundle install --quiet
+
+echo "[deploy] migrating..."
+bin/rails db:migrate
+
+echo "[deploy] compiling assets..."
+bin/rails assets:precompile
+bin/rails tailwindcss:build
+
+echo "[deploy] restarting Passenger..."
+touch tmp/restart.txt
+
+echo "[deploy] restarting Solid Queue..."
+sudo /bin/systemctl restart tikedon-jobs
+
+echo "[deploy] done: $(git rev-parse --short HEAD)"
