@@ -7,33 +7,28 @@
 
 | # | Scope Name | Scope ID | Scope Key | Status | Notes |
 |---|---|---|---|---|---|
-| 1 | Affiliate Information | 434372 | `creator.affiliate.info` | Under review | Creator search, GMV, engagement data |
-| 2 | Finance Information | 430596 | `seller.finance.info` | Active | Commission and revenue reporting |
-| 3 | Fulfillment Basic | 430340 | `seller.fulfillment.basic` | Awaiting submission | Sample/package tracking |
-| 4 | Global Shop Information | 431300 | `seller.shop.info` | Awaiting submission | Shop_cipher for API calls |
-| 5 | Logistics Basic | 430404 | `seller.logistics` | Awaiting submission | Shipping/tracking info |
-| 6 | Manage Affiliate Messages | 1897028 | `seller.affiliate_messages.write` | Awaiting submission | Send follow-up messages, IM messaging |
-| 7 | Manage Seller Affiliate Collaboration | 890884 | `seller.affiliate_collaboration.write` | Under review | Create/manage targeted + open collaborations |
-| 8 | Order Information | 430276 | `seller.order.info` | Awaiting submission (SENSITIVE) | Order details, delivery status |
-| 9 | Product Basic | 430148 | `seller.product.basic` | Awaiting submission | Read/manage product catalog |
-| 10 | Read Creator Marketplace | 925572 | `seller.creator_marketplace.read` | Under review | Creator search by GMV/followers/category |
-| 11 | Read Seller Affiliate Collaboration | 733764 | `seller.affiliate_collaboration.read` | Under review | Read collab status, samples, orders |
-| 12 | Shop Authorized Information | 431812 | `seller.authorization.info` | Awaiting submission | OAuth flow, webhooks |
-| 13 | TikTok Shop Analytics | 948484 | `data.shop_analytics.public.read` | Awaiting submission | Shop/product/video/LIVE performance metrics |
-| 14 | Read Creator Affiliate Collaborations | 1021508 | `creator.affiliate_collaboration.read` | Under review | Creator collab history, sample apps, affiliate orders |
-| 15 | Read Showcase Products | 791236 | `creator.showcase.read` | Under review | Creator showcase product list |
+| 1 | Finance Information | 430596 | `seller.finance.info` | Active | Commission and revenue reporting |
+| 2 | Fulfillment Basic | 430340 | `seller.fulfillment.basic` | Awaiting submission | Sample/package tracking |
+| 3 | Global Shop Information | 431300 | `seller.shop.info` | Awaiting submission | Shop_cipher for API calls |
+| 4 | Logistics Basic | 430404 | `seller.logistics` | Awaiting submission | Shipping/tracking info |
+| 5 | Manage Affiliate Messages | 1897028 | `seller.affiliate_messages.write` | Awaiting submission | Send follow-up messages, IM messaging |
+| 6 | Manage Seller Affiliate Collaboration | 890884 | `seller.affiliate_collaboration.write` | Under review | Create/manage targeted + open collaborations |
+| 7 | Order Information | 430276 | `seller.order.info` | Awaiting submission (SENSITIVE) | Order details, delivery status |
+| 8 | Product Basic | 430148 | `seller.product.basic` | Awaiting submission | Read/manage product catalog |
+| 9 | Read Creator Marketplace | 925572 | `seller.creator_marketplace.read` | Under review | Creator search by GMV/followers/category |
+| 10 | Read Seller Affiliate Collaboration | 733764 | `seller.affiliate_collaboration.read` | Under review | Read collab status, samples, orders |
+| 11 | Shop Authorized Information | 431812 | `seller.authorization.info` | Awaiting submission | OAuth flow, webhooks |
+| 12 | TikTok Shop Analytics | 948484 | `data.shop_analytics.public.read` | Awaiting submission | Shop/product/video/LIVE performance metrics |
 
 ## Skipped Scopes
 
-Everything else (Global Product CRUD, Promotions, all Partner/TAP scopes — we are a seller not a partner —, FBT, Package Split, External Order References, Delivery Status Write, Product Optimization, Image Translation, Redeem Info).
+All Partner/TAP scopes — we are a seller, not a registered Affiliate Partner.
+
+All `creator.*` scopes — they require a creator-authorization OAuth flow that our app does not implement. Tikedon is shop-authorized only. The three we had previously applied for (`creator.affiliate.info`, `creator.showcase.read`, `creator.affiliate_collaboration.read`) were all rejected on this basis and have been withdrawn from our scope request list.
+
+Everything else not relevant to our use case (Global Product CRUD, Promotions, FBT, Package Split, External Order References, Delivery Status Write, Product Optimization, Image Translation, Redeem Info).
 
 ## Scope Details (updated as we activate each one)
-
-### Affiliate Information
-- **Scope ID**: 434372
-- **Scope Key**: `creator.affiliate.info`
-- **Status**: Under review
-- **Used by**: `Tiktok::Resources::AffiliateCreator` — creator search, profile data
 
 ### Finance Information
 - **Scope ID**: 430596
@@ -207,31 +202,6 @@ Everything else (Global Product CRUD, Promotions, all Partner/TAP scopes — we 
   - Seller Search Affiliate Open Collaboration Product — search open collaboration products by category/commission/keywords across regions.
   - Seller Search Sample Applications — query sample applications by product, creator, or status.
   - Seller Search Sample Applications Fulfillments — track sample application fulfillment status and whether it resulted in orders.
-
-### Read Creator Affiliate Collaborations
-- **Scope ID**: 1021508
-- **Scope Key**: `creator.affiliate_collaboration.read`
-- **Status**: Under review
-- **Used by**: Creator detail page — collaboration history display
-- **Endpoints**:
-  - Creator Get Sample Request Deeplink — one-time TikTok deeplink to sample request page. Can redirect back to 3rd party app after submission.
-  - Creator Search Open Collaboration Product — search open collaboration products by category/commission/keywords. Region-restricted to creator's affiliate region.
-  - Creator Search Sample Application Fulfillments — query fulfillment status for received sample applications.
-  - Creator Select Affiliate Product — filter products using various conditions. Returns algorithm-recommended products when no filter given.
-  - Get Creator Applicable Sample Label — check if a creator can apply for a sample of a specific product.
-  - Get Creator Sample Application Detail — sample detail for a specified sample application.
-  - Get Open Collaboration Product List By Product Ids — get open collaboration product list by product IDs.
-  - Search Creator Affiliate Orders — retrieve affiliate orders generated by a creator. Track conversions by order ID and product ID.
-  - Search Creator Sample Applications — get sample application list of creator.
-  - Search Creator Target Collaborations — search creator's target collaborations and products within them.
-
-### Read Showcase Products
-- **Scope ID**: 791236
-- **Scope Key**: `creator.showcase.read`
-- **Status**: Under review
-- **Used by**: Creator detail page — showcase products grid
-- **Endpoints**:
-  - Read Showcase Products — retrieve products in a creator's showcase.
 
 ### Shop Authorized Information
 - **Scope ID**: 431812

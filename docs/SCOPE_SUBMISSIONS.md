@@ -62,3 +62,25 @@ Every time a scope application is submitted or resubmitted through the TikTok Sh
 ## Manage Affiliate Partner Campaigns — `partner.tap_campaign.write`
 
 **Status:** Rejected 2026-04-20. **Not resubmitted** — this scope requires registered TikTok Affiliate Partner (TAP) status, which we do not have and are not pursuing. We are a seller, not a partner. Withdrawn from our scope request list.
+
+---
+
+## Read Showcase Products — `creator.showcase.read`
+
+**Status:** Rejected 2026-04-21. **Not resubmitted** — this is a `creator.*` scope that requires creator-level OAuth authorization. Tikedon only holds shop-level authorization (merchants connect their TikTok Shop), so tokens issued to Tikedon cannot call endpoints under this scope even if it were approved.
+
+The UI surface that depended on this scope (the "Showcase & Brand History" section on the creator detail page, added in commit `e9153e0`) is effectively mocked/seeded only and will not function in production. Follow-up needed: either remove that UI section or rebuild it against scope data that's available to a seller (e.g. `seller.creator_marketplace.read`).
+
+---
+
+## Read Creator Affiliate Collaborations — `creator.affiliate_collaboration.read`
+
+**Status:** Rejected 2026-04-21 (same day as `creator.showcase.read`). **Not resubmitted** — same structural reason as the other two `creator.*` scopes: requires creator-authorization OAuth, which Tikedon does not have. All three `creator.*` scopes are now permanently denied and have been withdrawn from our scope request list.
+
+The UI surface that depended on this scope (the "Affiliate Collaboration History" + "Recommended Products" sections on the creator detail page, commit `bfaa681`) has been removed along with the JSONB columns that mocked the data. See `20260421210447_drop_creator_intelligence_columns.rb`.
+
+---
+
+## Summary — all `creator.*` scopes
+
+Three scopes applied for, three rejected, three withdrawn. TikTok's scope review reliably rejects `creator.*` scopes when the app is registered with shop-only OAuth. Lesson learned: never apply for a `creator.*` scope from a shop-authorized custom app regardless of the feature it would enable. Build those features with `seller.*` scopes or with public-data scraping instead.
