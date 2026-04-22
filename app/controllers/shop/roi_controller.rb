@@ -1,57 +1,84 @@
 class Shop::RoiController < Shop::BaseController
+  SAMPLE_COST_CENTS = 2500 # rough internal estimate, $25/sample
+
   # GET /shop/roi
   def show
     authorize!(:show, Roi)
 
-    # Fake ROI data for now — will be replaced with real affiliate order API data.
-    # Each entry represents a creator's aggregate performance for this shop.
-    @roi_data = build_fake_roi_data
-    @total_revenue = @roi_data.sum { |r| r[:revenue] }
+    @roi_data = build_roi_rows
+    @total_revenue_cents   = @roi_data.sum { |r| r[:gmv_cents] }
+    @total_commission_cents = @roi_data.sum { |r| r[:commission_cents] }
     @total_orders = @roi_data.sum { |r| r[:orders] }
-    @top_creator = @roi_data.max_by { |r| r[:revenue] }
+    @total_videos = @roi_data.sum { |r| r[:videos] }
+    @top_creator  = @roi_data.max_by { |r| r[:gmv_cents] }
   end
 
   private
 
-  def build_fake_roi_data
-    creators = Creator.joins(:invites)
-                      .where(invites: { shop_id: Current.shop.id })
-                      .distinct
-                      .limit(20)
+  # Pull real per-creator rollups from affiliate_orders + creator_videos,
+  # joined with invites + samples for outreach context.
+  def build_roi_rows
+    shop = Current.shop
 
-    return seed_placeholder_data if creators.empty?
+    order_agg = shop.affiliate_orders
+      .where.not(creator_id: nil)
+      .group(:creator_id)
+      .select("creator_id,
+               COUNT(*) AS order_count,
+               COALESCE(SUM(gmv_cents), 0) AS gmv_cents_sum,
+               COALESCE(SUM(commission_cents), 0) AS commission_cents_sum")
+      .index_by(&:creator_id)
 
-    creators.map do |creator|
-      invite_count = Current.shop.invites.where(creator_id: creator.id).count
-      sent_count = Current.shop.invites.where(creator_id: creator.id, status: "sent").count
-      sample_count = Current.shop.samples.joins(:invite).where(invites: { creator_id: creator.id }).count
+    video_agg = shop.creator_videos
+      .where.not(creator_id: nil)
+      .group(:creator_id)
+      .select("creator_id,
+               COUNT(*) AS video_count,
+               COALESCE(SUM(views), 0) AS views_sum")
+      .index_by(&:creator_id)
 
-      # Generate deterministic-ish fake numbers from creator ID
-      seed = creator.id * 7 + 13
-      orders = (seed % 40) + 1
-      revenue = orders * ((seed % 80) + 15) * 100 # cents → dollars range $15-$95 per order
-      sample_cost = sample_count * 2500 # $25 per sample estimate
+    # Union of creator ids seen anywhere — orders, videos, or invites.
+    creator_ids = (order_agg.keys + video_agg.keys +
+                   shop.invites.distinct.pluck(:creator_id)).compact.uniq
+    return [] if creator_ids.empty?
+
+    creators = Creator.where(id: creator_ids).index_by(&:id)
+
+    invite_counts = shop.invites.where(creator_id: creator_ids).group(:creator_id).count
+    sent_counts   = shop.invites.where(creator_id: creator_ids, status: "sent").group(:creator_id).count
+    sample_counts = shop.samples.joins(:invite)
+                         .where(invites: { creator_id: creator_ids })
+                         .group("invites.creator_id").count
+
+    creator_ids.map do |cid|
+      creator = creators[cid]
+      orders  = order_agg[cid]
+      videos  = video_agg[cid]
+      invites = invite_counts[cid].to_i
+      sent    = sent_counts[cid].to_i
+      samples = sample_counts[cid].to_i
+
+      gmv_cents        = orders&.gmv_cents_sum.to_i
+      commission_cents = orders&.commission_cents_sum.to_i
+      sample_cost      = samples * SAMPLE_COST_CENTS
+      net_cents        = gmv_cents - commission_cents - sample_cost
+      roi_multiple     = sample_cost > 0 ? (gmv_cents.to_f / sample_cost).round(1) : nil
 
       {
         creator: creator,
-        handle: creator.handle,
-        display_name: creator.display_name || creator.handle,
-        orders: orders,
-        revenue: revenue,
-        samples_sent: sample_count,
-        acceptance_rate: sent_count > 0 ? (sent_count.to_f / [invite_count, 1].max * 100).round(1) : 0,
-        sample_cost: sample_cost,
-        roi: sample_cost > 0 ? (revenue.to_f / sample_cost).round(1) : nil
+        handle: creator&.handle,
+        display_name: creator&.display_name || creator&.handle || "(unknown)",
+        orders: orders&.order_count.to_i,
+        gmv_cents: gmv_cents,
+        commission_cents: commission_cents,
+        videos: videos&.video_count.to_i,
+        views:  videos&.views_sum.to_i,
+        samples_sent: samples,
+        acceptance_rate: invites > 0 ? (sent.to_f / invites * 100).round(1) : 0,
+        sample_cost_cents: sample_cost,
+        net_cents: net_cents,
+        roi: roi_multiple
       }
-    end.sort_by { |r| -r[:revenue] }
-  end
-
-  def seed_placeholder_data
-    # If no creators have been invited yet, show placeholder data
-    [
-      { handle: "sample_creator", display_name: "Sample Creator", orders: 12, revenue: 48000, samples_sent: 2, acceptance_rate: 85.0, sample_cost: 5000, roi: 9.6, creator: nil },
-      { handle: "demo_influencer", display_name: "Demo Influencer", orders: 8, revenue: 32000, samples_sent: 1, acceptance_rate: 100.0, sample_cost: 2500, roi: 12.8, creator: nil },
-      { handle: "test_creator", display_name: "Test Creator", orders: 3, revenue: 9500, samples_sent: 1, acceptance_rate: 50.0, sample_cost: 2500, roi: 3.8, creator: nil }
-    ]
+    end.sort_by { |r| -r[:gmv_cents] }
   end
 end

@@ -1,0 +1,111 @@
+<div class="space-y-8">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900">Creator videos</h1>
+    <p class="mt-1 text-sm text-gray-500">
+      Videos TikTok creators have posted featuring your products, pulled from
+      Shop Video Performance analytics. Shows post rate, reach, and GMV driven per creator.
+    </p>
+  </div>
+
+  <%# Creator leaderboard — aggregated stats per creator %>
+  <div class="rounded-lg border border-gray-200 bg-white">
+    <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+      <h2 class="text-base font-semibold text-gray-900">Creator leaderboard</h2>
+      <p class="text-xs text-gray-500">Top 25 by GMV driven</p>
+    </div>
+
+    <% if @leaderboard.any? %>
+      <table class="min-w-full divide-y divide-gray-100 text-sm">
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-6 py-3">#</th>
+            <th class="px-6 py-3">Creator</th>
+            <th class="px-6 py-3 text-right">Videos</th>
+            <th class="px-6 py-3 text-right">Views</th>
+            <th class="px-6 py-3 text-right">Engagement</th>
+            <th class="px-6 py-3 text-right">Orders</th>
+            <th class="px-6 py-3 text-right">GMV driven</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @leaderboard.each_with_index do |row, i| %>
+            <% creator = @creators_by_id[row.creator_id] %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-3 text-gray-500"><%= i + 1 %></td>
+              <td class="px-6 py-3">
+                <% if creator %>
+                  <%= link_to "@#{creator.handle}", shop_creator_path(creator), class: "font-medium text-gray-900 hover:text-indigo-600" %>
+                <% else %>
+                  <span class="text-gray-500">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-3 text-right tabular-nums"><%= row.video_count %></td>
+              <td class="px-6 py-3 text-right tabular-nums"><%= number_with_delimiter(row.total_views.to_i) %></td>
+              <td class="px-6 py-3 text-right tabular-nums"><%= number_with_delimiter(row.total_engagement.to_i) %></td>
+              <td class="px-6 py-3 text-right tabular-nums"><%= row.total_orders %></td>
+              <td class="px-6 py-3 text-right font-semibold text-emerald-700 tabular-nums">$<%= number_with_delimiter((row.total_gmv_cents.to_i / 100.0).round) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="px-6 py-12 text-center">
+        <p class="text-sm text-gray-500">No video data yet. Videos sync automatically after creators post content featuring your products.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# All videos %>
+  <div class="rounded-lg border border-gray-200 bg-white">
+    <div class="border-b border-gray-100 px-6 py-4">
+      <h2 class="text-base font-semibold text-gray-900">All videos</h2>
+      <p class="mt-0.5 text-xs text-gray-500">Most recent 100 videos across all your campaigns.</p>
+    </div>
+
+    <% if @videos.any? %>
+      <ul class="divide-y divide-gray-100">
+        <% @videos.each do |v| %>
+          <li class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50">
+            <% if v.thumbnail_url.present? %>
+              <img src="<%= v.thumbnail_url %>" class="h-16 w-16 rounded bg-gray-100 object-cover" alt="">
+            <% else %>
+              <div class="h-16 w-16 rounded bg-gray-100"></div>
+            <% end %>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <% if v.creator %>
+                  <%= link_to "@#{v.creator.handle}", shop_creator_path(v.creator), class: "text-sm font-medium text-gray-900 hover:text-indigo-600" %>
+                <% end %>
+                <% if v.campaign %>
+                  <span class="text-xs text-gray-400">·</span>
+                  <%= link_to v.campaign.name, shop_campaign_path(v.campaign), class: "text-xs text-gray-500 hover:text-indigo-600" %>
+                <% end %>
+              </div>
+              <p class="mt-0.5 truncate text-sm text-gray-600"><%= v.title.presence || "(no title)" %></p>
+              <p class="mt-1 text-xs text-gray-400">Posted <%= v.posted_at ? time_ago_in_words(v.posted_at) + " ago" : "—" %></p>
+            </div>
+            <div class="flex items-center gap-6 text-right text-xs">
+              <div>
+                <div class="text-gray-400">Views</div>
+                <div class="font-semibold text-gray-900"><%= number_with_delimiter(v.views) %></div>
+              </div>
+              <div>
+                <div class="text-gray-400">Orders</div>
+                <div class="font-semibold text-gray-900"><%= v.attributed_orders %></div>
+              </div>
+              <div>
+                <div class="text-gray-400">GMV</div>
+                <div class="font-semibold text-emerald-700">$<%= number_with_delimiter(v.attributed_gmv_dollars.round) %></div>
+              </div>
+              <%= link_to "View", shop_video_path(v), class: "rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-12 text-center">
+        <p class="text-sm text-gray-500">No videos synced yet.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

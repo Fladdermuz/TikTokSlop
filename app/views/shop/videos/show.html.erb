@@ -1,0 +1,71 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <div>
+    <%= link_to "← Back to videos", shop_videos_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <div class="flex items-start gap-5">
+      <% if @video.thumbnail_url.present? %>
+        <img src="<%= @video.thumbnail_url %>" class="h-32 w-32 rounded-md bg-gray-100 object-cover" alt="">
+      <% end %>
+      <div class="flex-1">
+        <h1 class="text-xl font-semibold text-gray-900"><%= @video.title.presence || "Untitled video" %></h1>
+        <p class="mt-1 text-sm text-gray-500">
+          <% if @video.creator %>
+            By <%= link_to "@#{@video.creator.handle}", shop_creator_path(@video.creator), class: "text-indigo-600 hover:underline" %>
+          <% end %>
+          <% if @video.campaign %>
+            · Campaign: <%= link_to @video.campaign.name, shop_campaign_path(@video.campaign), class: "text-indigo-600 hover:underline" %>
+          <% end %>
+        </p>
+        <p class="mt-1 text-xs text-gray-400">
+          Posted <%= @video.posted_at&.strftime("%b %-d, %Y at %-l:%M %p") || "—" %>
+          <% if @video.video_url.present? %>
+            · <%= link_to "View on TikTok ↗", @video.video_url, target: "_blank", rel: "noopener", class: "text-indigo-600 hover:underline" %>
+          <% end %>
+        </p>
+      </div>
+    </div>
+
+    <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Views</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_with_delimiter(@video.views) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Likes</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_with_delimiter(@video.likes) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Comments</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_with_delimiter(@video.comments) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Shares</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_with_delimiter(@video.shares) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Engagement rate</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= number_to_percentage(@video.engagement_rate * 100, precision: 2) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Orders driven</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @video.attributed_orders %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">GMV driven</dt>
+        <dd class="mt-1 text-lg font-semibold text-emerald-700">$<%= number_with_delimiter(@video.attributed_gmv_dollars.round(2)) %></dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-gray-500">Product</dt>
+        <dd class="mt-1 text-sm text-gray-900">
+          <% if @video.product %>
+            <%= link_to @video.product.name, shop_product_path(@video.product), class: "text-indigo-600 hover:underline" %>
+          <% else %>
+            —
+          <% end %>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>

@@ -61,6 +61,87 @@
     </dl>
   </div>
 
+  <%# Videos posted featuring our products %>
+  <% if @videos_total && @videos_total > 0 %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold text-gray-900">Videos posted featuring your products</h2>
+        <span class="text-xs text-gray-500"><%= @videos_total %> total</span>
+      </div>
+      <ul class="mt-3 divide-y divide-gray-100">
+        <% @videos.each do |v| %>
+          <li class="flex items-center gap-4 py-3">
+            <% if v.thumbnail_url.present? %>
+              <img src="<%= v.thumbnail_url %>" class="h-14 w-14 rounded bg-gray-100 object-cover" alt="">
+            <% else %>
+              <div class="h-14 w-14 rounded bg-gray-100"></div>
+            <% end %>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-gray-900"><%= v.title.presence || "(no title)" %></p>
+              <p class="mt-0.5 text-xs text-gray-500">
+                <% if v.campaign %><%= v.campaign.name %> · <% end %>
+                <%= v.posted_at ? time_ago_in_words(v.posted_at) + " ago" : "—" %>
+              </p>
+            </div>
+            <div class="flex items-center gap-6 text-right text-xs">
+              <div><div class="text-gray-400">Views</div><div class="font-semibold text-gray-900"><%= number_with_delimiter(v.views) %></div></div>
+              <div><div class="text-gray-400">Orders</div><div class="font-semibold text-gray-900"><%= v.attributed_orders %></div></div>
+              <div><div class="text-gray-400">GMV</div><div class="font-semibold text-emerald-700">$<%= number_with_delimiter(v.attributed_gmv_dollars.round) %></div></div>
+              <%= link_to "View", shop_video_path(v), class: "rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Sales this creator has driven for us %>
+  <% total_orders, total_gmv_cents, total_commission_cents = Array(@creator_totals) %>
+  <% if total_orders.to_i > 0 %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 class="text-base font-semibold text-gray-900">Sales driven for <%= Current.shop.name %></h2>
+      <dl class="mt-3 grid grid-cols-3 gap-4 text-sm">
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Orders</dt>
+          <dd class="mt-1 text-xl font-semibold text-gray-900"><%= total_orders %></dd>
+        </div>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">GMV</dt>
+          <dd class="mt-1 text-xl font-semibold text-emerald-700">$<%= number_with_delimiter((total_gmv_cents.to_i / 100.0).round) %></dd>
+        </div>
+        <div>
+          <dt class="text-xs uppercase tracking-wide text-gray-500">Commission paid</dt>
+          <dd class="mt-1 text-xl font-semibold text-gray-900">$<%= number_with_delimiter((total_commission_cents.to_i / 100.0).round) %></dd>
+        </div>
+      </dl>
+
+      <% if @affiliate_orders.any? %>
+        <div class="mt-4 overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-100">
+              <tr>
+                <th class="pb-2 pr-4">Date</th>
+                <th class="pb-2 pr-4">Campaign</th>
+                <th class="pb-2 pr-4 text-right">GMV</th>
+                <th class="pb-2 text-right">Commission</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% @affiliate_orders.each do |o| %>
+                <tr>
+                  <td class="py-2 pr-4 text-gray-500"><%= o.ordered_at&.strftime("%b %-d, %Y") %></td>
+                  <td class="py-2 pr-4 text-gray-700 truncate max-w-[240px]"><%= o.campaign&.name || "—" %></td>
+                  <td class="py-2 pr-4 text-right font-semibold text-emerald-700">$<%= sprintf("%.2f", o.gmv_cents.to_f / 100) %></td>
+                  <td class="py-2 text-right text-gray-900">$<%= sprintf("%.2f", o.commission_cents.to_f / 100) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="rounded-lg border border-gray-200 bg-white p-6">
     <h2 class="text-base font-semibold text-gray-900">Outreach history with <%= Current.shop.name %></h2>
     <% if @invites.any? %>

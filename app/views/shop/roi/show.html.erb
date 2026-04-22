@@ -1,43 +1,53 @@
 <div class="space-y-6">
   <div>
     <h1 class="text-2xl font-semibold text-gray-900">Creator ROI</h1>
-    <p class="mt-1 text-sm text-gray-500">Revenue and sales attributed to each creator from affiliate orders.</p>
+    <p class="mt-1 text-sm text-gray-500">Per-creator attribution across videos posted, orders driven, and commissions paid. Data pulled from Shop Video Performance analytics and Seller Affiliate Orders.</p>
   </div>
 
-  <%# Summary Cards %>
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <%# Summary cards %>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
     <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <dt class="text-xs uppercase tracking-wide text-gray-500">Total Affiliate Revenue</dt>
-      <dd class="mt-2 text-2xl font-semibold text-gray-900">$<%= number_with_delimiter((@total_revenue / 100.0).round(2)) %></dd>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Total GMV driven</dt>
+      <dd class="mt-2 text-2xl font-semibold text-emerald-700">$<%= number_with_delimiter((@total_revenue_cents / 100.0).round(0)) %></dd>
     </div>
     <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <dt class="text-xs uppercase tracking-wide text-gray-500">Total Orders</dt>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Commission paid</dt>
+      <dd class="mt-2 text-2xl font-semibold text-gray-900">$<%= number_with_delimiter((@total_commission_cents / 100.0).round(0)) %></dd>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-5">
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Orders attributed</dt>
       <dd class="mt-2 text-2xl font-semibold text-gray-900"><%= number_with_delimiter(@total_orders) %></dd>
     </div>
     <div class="rounded-lg border border-gray-200 bg-white p-5">
-      <dt class="text-xs uppercase tracking-wide text-gray-500">Top Creator by Revenue</dt>
-      <dd class="mt-2 text-2xl font-semibold text-gray-900">
-        <% if @top_creator %>
-          <%= @top_creator[:display_name] %>
-          <span class="ml-2 text-sm font-normal text-gray-500">$<%= number_with_delimiter((@top_creator[:revenue] / 100.0).round(2)) %></span>
-        <% else %>
-          &mdash;
-        <% end %>
-      </dd>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Videos posted</dt>
+      <dd class="mt-2 text-2xl font-semibold text-gray-900"><%= number_with_delimiter(@total_videos) %></dd>
     </div>
   </div>
 
-  <%# ROI Table %>
+  <% if @top_creator %>
+    <div class="rounded-lg border border-indigo-100 bg-indigo-50 p-4">
+      <div class="text-xs font-medium uppercase tracking-wide text-indigo-900">Top creator by GMV</div>
+      <div class="mt-1 text-lg font-semibold text-indigo-900">
+        <%= @top_creator[:display_name] %>
+        <span class="ml-2 text-sm font-normal text-indigo-700">$<%= number_with_delimiter((@top_creator[:gmv_cents] / 100.0).round) %> from <%= @top_creator[:orders] %> orders</span>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ROI table %>
   <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-50">
         <tr>
-          <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Creator</th>
-          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Total Orders</th>
-          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Total Revenue</th>
-          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Samples Sent</th>
-          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Acceptance Rate</th>
-          <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">ROI</th>
+          <th class="px-4 py-3 text-left font-medium text-gray-500">Creator</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Videos</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Views</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Samples sent</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Orders</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">GMV driven</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Commission</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">Net</th>
+          <th class="px-4 py-3 text-right font-medium text-gray-500">ROI</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
@@ -49,17 +59,19 @@
                 <div class="text-xs text-gray-500">@<%= row[:handle] %></div>
               <% else %>
                 <span class="font-medium text-gray-900"><%= row[:display_name] %></span>
-                <div class="text-xs text-gray-500">@<%= row[:handle] %></div>
               <% end %>
             </td>
-            <td class="px-4 py-3 text-right tabular-nums"><%= number_with_delimiter(row[:orders]) %></td>
-            <td class="px-4 py-3 text-right tabular-nums font-semibold text-gray-900">$<%= number_with_delimiter((row[:revenue] / 100.0).round(2)) %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= row[:videos] %></td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= number_with_delimiter(row[:views]) %></td>
             <td class="px-4 py-3 text-right tabular-nums"><%= row[:samples_sent] %></td>
-            <td class="px-4 py-3 text-right tabular-nums"><%= row[:acceptance_rate] %>%</td>
+            <td class="px-4 py-3 text-right tabular-nums"><%= number_with_delimiter(row[:orders]) %></td>
+            <td class="px-4 py-3 text-right tabular-nums font-semibold text-emerald-700">$<%= number_with_delimiter((row[:gmv_cents] / 100.0).round) %></td>
+            <td class="px-4 py-3 text-right tabular-nums text-gray-600">$<%= number_with_delimiter((row[:commission_cents] / 100.0).round) %></td>
+            <td class="px-4 py-3 text-right tabular-nums font-semibold <%= row[:net_cents] >= 0 ? 'text-gray-900' : 'text-red-600' %>">$<%= number_with_delimiter((row[:net_cents] / 100.0).round) %></td>
             <td class="px-4 py-3 text-right tabular-nums">
               <% if row[:roi] %>
-                <% roi_color = row[:roi] >= 5 ? "text-emerald-600" : row[:roi] >= 2 ? "text-yellow-600" : "text-red-600" %>
-                <span class="font-semibold <%= roi_color %>"><%= row[:roi] %>x</span>
+                <% color = row[:roi] >= 5 ? "text-emerald-600" : row[:roi] >= 2 ? "text-yellow-600" : "text-red-600" %>
+                <span class="font-semibold <%= color %>"><%= row[:roi] %>x</span>
               <% else %>
                 <span class="text-gray-400">&mdash;</span>
               <% end %>
@@ -68,8 +80,8 @@
         <% end %>
         <% if @roi_data.empty? %>
           <tr>
-            <td colspan="6" class="px-4 py-12 text-center text-gray-500">
-              No affiliate order data yet. Send invites to creators and track their performance here.
+            <td colspan="9" class="px-4 py-12 text-center text-gray-500">
+              No affiliate data yet. Invites, videos posted, and affiliate orders will populate here.
             </td>
           </tr>
         <% end %>
@@ -77,5 +89,7 @@
     </table>
   </div>
 
-  <p class="text-xs text-gray-400">Sample cost estimated at $25 per sample. Real order data will be populated from the TikTok affiliate orders API.</p>
+  <p class="text-xs text-gray-400">
+    Sample cost estimated at $<%= Shop::RoiController::SAMPLE_COST_CENTS / 100 %> per sample. Net = GMV − commission − sample cost. Sourced from <code>data.shop_analytics.public.read</code> and <code>seller.affiliate_collaboration.read</code>.
+  </p>
 </div>

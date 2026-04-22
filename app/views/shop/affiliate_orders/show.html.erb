@@ -1,0 +1,25 @@
+<div class="mx-auto max-w-2xl space-y-6">
+  <div>
+    <%= link_to "← Back to affiliate orders", shop_affiliate_orders_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <h1 class="text-xl font-semibold text-gray-900">Order <span class="font-mono text-sm text-gray-500"><%= @order.external_id %></span></h1>
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <dt class="text-gray-500">Placed at</dt><dd><%= @order.ordered_at&.strftime("%b %-d, %Y at %-l:%M %p") || "—" %></dd>
+      <dt class="text-gray-500">Status</dt><dd class="capitalize"><%= @order.order_status %></dd>
+      <dt class="text-gray-500">GMV</dt><dd class="font-semibold text-emerald-700">$<%= sprintf("%.2f", @order.gmv_dollars) %></dd>
+      <dt class="text-gray-500">Commission</dt><dd>$<%= sprintf("%.2f", @order.commission_dollars) %></dd>
+      <dt class="text-gray-500">Creator</dt><dd>
+        <% if @order.creator %><%= link_to "@#{@order.creator.handle}", shop_creator_path(@order.creator), class: "text-indigo-600 hover:underline" %><% else %>—<% end %>
+      </dd>
+      <dt class="text-gray-500">Campaign</dt><dd>
+        <% if @order.campaign %><%= link_to @order.campaign.name, shop_campaign_path(@order.campaign), class: "text-indigo-600 hover:underline" %><% else %>—<% end %>
+      </dd>
+      <dt class="text-gray-500">Product</dt><dd><%= @order.product&.name || "—" %></dd>
+      <dt class="text-gray-500">Invite</dt><dd>
+        <% if @order.invite %><%= link_to "#{@order.invite.status}", shop_invite_path(@order.invite), class: "text-indigo-600 hover:underline" %><% else %>—<% end %>
+      </dd>
+    </dl>
+  </div>
+</div>

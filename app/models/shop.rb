@@ -9,6 +9,8 @@ class Shop < ApplicationRecord
   has_many :campaigns, dependent: :destroy
   has_many :invites, dependent: :destroy
   has_many :samples, dependent: :destroy
+  has_many :creator_videos,   dependent: :destroy
+  has_many :affiliate_orders, dependent: :destroy
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true,

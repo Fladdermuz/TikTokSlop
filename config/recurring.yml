@@ -28,3 +28,13 @@ production:
     class: Tiktok::ScanForFollowUpsJob
     queue: tiktok
     schedule: every 2 hours
+
+  tiktok_sync_affiliate_orders:
+    class: Tiktok::SyncAllAffiliateOrdersJob
+    queue: tiktok
+    schedule: every hour
+
+  tiktok_sync_shop_videos:
+    class: Tiktok::SyncAllShopVideosJob
+    queue: tiktok
+    schedule: every 6 hours

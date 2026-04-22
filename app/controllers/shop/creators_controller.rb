@@ -15,6 +15,12 @@ class Shop::CreatorsController < Shop::BaseController
     @creator = Creator.find(params[:id])
     @invites = Current.shop.invites.where(creator_id: @creator.id).includes(:campaign).order(created_at: :desc)
     @samples = Current.shop.samples.joins(:invite).where(invites: { creator_id: @creator.id }).includes(:invite)
+    @videos  = Current.shop.creator_videos.where(creator_id: @creator.id).includes(:campaign, :product).recent.limit(10)
+    @videos_total = Current.shop.creator_videos.where(creator_id: @creator.id).count
+    @affiliate_orders = Current.shop.affiliate_orders.where(creator_id: @creator.id).order(ordered_at: :desc).limit(10)
+    @creator_totals = Current.shop.affiliate_orders.where(creator_id: @creator.id).pick(
+      Arel.sql("COUNT(*), COALESCE(SUM(gmv_cents), 0), COALESCE(SUM(commission_cents), 0)")
+    ) || [ 0, 0, 0 ]
   end
 
   def export

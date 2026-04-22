@@ -50,6 +50,8 @@ Rails.application.routes.draw do
     resource  :tiktok_connection, only: %i[show create destroy]
     resource  :open_collab_settings, only: %i[show update]
     resources :members,     only: %i[index new create destroy]
+    resources :videos,      only: %i[index show]
+    resources :affiliate_orders, only: %i[index show]
     resource  :roi, only: [:show], controller: "roi"
     resource  :finance, only: [:show], controller: "finance" do
       collection do

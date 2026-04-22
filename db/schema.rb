@@ -10,9 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_210447) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_004415) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "affiliate_orders", force: :cascade do |t|
+    t.bigint "campaign_id"
+    t.bigint "commission_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "creator_id"
+    t.string "currency", default: "USD", null: false
+    t.string "external_id"
+    t.bigint "gmv_cents", default: 0, null: false
+    t.bigint "invite_id"
+    t.string "order_status", default: "pending", null: false
+    t.datetime "ordered_at"
+    t.bigint "product_id"
+    t.jsonb "raw", default: {}, null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["campaign_id"], name: "index_affiliate_orders_on_campaign_id"
+    t.index ["creator_id"], name: "index_affiliate_orders_on_creator_id"
+    t.index ["external_id"], name: "index_affiliate_orders_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["invite_id"], name: "index_affiliate_orders_on_invite_id"
+    t.index ["order_status"], name: "index_affiliate_orders_on_order_status"
+    t.index ["ordered_at"], name: "index_affiliate_orders_on_ordered_at"
+    t.index ["product_id"], name: "index_affiliate_orders_on_product_id"
+    t.index ["shop_id", "ordered_at"], name: "index_affiliate_orders_on_shop_id_and_ordered_at"
+    t.index ["shop_id"], name: "index_affiliate_orders_on_shop_id"
+  end
 
   create_table "ai_usage_logs", force: :cascade do |t|
     t.integer "cost_cents", default: 0, null: false
@@ -56,6 +82,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_210447) do
     t.index ["product_id"], name: "index_campaigns_on_product_id"
     t.index ["shop_id"], name: "index_campaigns_on_shop_id"
     t.index ["status"], name: "index_campaigns_on_status"
+  end
+
+  create_table "creator_videos", force: :cascade do |t|
+    t.bigint "attributed_gmv_cents", default: 0, null: false
+    t.integer "attributed_orders", default: 0, null: false
+    t.bigint "campaign_id"
+    t.bigint "comments", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "creator_id"
+    t.string "currency", default: "USD", null: false
+    t.string "external_id"
+    t.bigint "invite_id"
+    t.bigint "likes", default: 0, null: false
+    t.datetime "posted_at"
+    t.bigint "product_id"
+    t.jsonb "raw", default: {}, null: false
+    t.bigint "shares", default: 0, null: false
+    t.bigint "shop_id", null: false
+    t.string "thumbnail_url"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "video_url"
+    t.bigint "views", default: 0, null: false
+    t.index ["campaign_id"], name: "index_creator_videos_on_campaign_id"
+    t.index ["creator_id"], name: "index_creator_videos_on_creator_id"
+    t.index ["external_id"], name: "index_creator_videos_on_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["invite_id"], name: "index_creator_videos_on_invite_id"
+    t.index ["posted_at"], name: "index_creator_videos_on_posted_at"
+    t.index ["product_id"], name: "index_creator_videos_on_product_id"
+    t.index ["shop_id", "posted_at"], name: "index_creator_videos_on_shop_id_and_posted_at"
+    t.index ["shop_id"], name: "index_creator_videos_on_shop_id"
   end
 
   create_table "creators", force: :cascade do |t|
@@ -253,9 +310,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_210447) do
     t.index ["platform_admin"], name: "index_users_on_platform_admin", where: "(platform_admin = true)"
   end
 
+  add_foreign_key "affiliate_orders", "campaigns"
+  add_foreign_key "affiliate_orders", "creators"
+  add_foreign_key "affiliate_orders", "invites"
+  add_foreign_key "affiliate_orders", "products"
+  add_foreign_key "affiliate_orders", "shops"
   add_foreign_key "ai_usage_logs", "shops"
   add_foreign_key "campaigns", "products"
   add_foreign_key "campaigns", "shops"
+  add_foreign_key "creator_videos", "campaigns"
+  add_foreign_key "creator_videos", "creators"
+  add_foreign_key "creator_videos", "invites"
+  add_foreign_key "creator_videos", "products"
+  add_foreign_key "creator_videos", "shops"
   add_foreign_key "invites", "campaigns"
   add_foreign_key "invites", "creators"
   add_foreign_key "invites", "shops"

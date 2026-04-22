@@ -164,11 +164,91 @@ namespace :db do
         created_samples += 1
       end
 
+      # Seed CreatorVideos — one or two per accepted invite, populated with
+      # realistic performance stats. Demonstrates the Shop Video Performance
+      # analytics (data.shop_analytics.public.read).
+      created_videos = 0
+      shop.invites.where(status: "accepted").includes(:campaign, :creator).each do |invite|
+        next if CreatorVideo.cross_tenant.where(invite_id: invite.id).exists?
+
+        rand(1..3).times do |n|
+          views = rand(2_000..450_000)
+          engagement_rate = rand(30..90) / 1000.0  # 3% to 9%
+          engagement = (views * engagement_rate).to_i
+          likes = (engagement * 0.75).to_i
+          comments = (engagement * 0.15).to_i
+          shares = (engagement * 0.10).to_i
+          conversion_rate = rand(2..20) / 1000.0  # 0.2% to 2%
+          orders = (views * conversion_rate).to_i
+          aov_cents = rand(1500..4500)  # $15-$45 AOV
+          gmv_cents = orders * aov_cents
+
+          CreatorVideo.create!(
+            shop: shop,
+            creator: invite.creator,
+            product: invite.campaign.product,
+            campaign: invite.campaign,
+            invite: invite,
+            external_id: "v_#{invite.id}_#{n}_#{SecureRandom.hex(4)}",
+            title: [ "Honest review of #{invite.campaign.product.name}",
+                     "My experience with #{invite.campaign.product.name} after 2 weeks",
+                     "Why I switched to #{invite.campaign.product.name}",
+                     "Testing #{invite.campaign.product.name} — worth the hype?" ].sample,
+            thumbnail_url: "https://picsum.photos/seed/#{invite.id}#{n}/400/400",
+            video_url: "https://www.tiktok.com/@#{invite.creator.handle}/video/#{SecureRandom.hex(8)}",
+            posted_at: rand(2..28).days.ago,
+            views: views,
+            likes: likes,
+            comments: comments,
+            shares: shares,
+            attributed_orders: orders,
+            attributed_gmv_cents: gmv_cents
+          )
+          created_videos += 1
+        end
+      end
+
+      # Seed AffiliateOrders — multiple per accepted invite based on that
+      # invite's video performance (roughly matches attribution totals).
+      # Demonstrates the seller.affiliate_collaboration.read Search Seller
+      # Affiliate Orders endpoint.
+      created_orders = 0
+      shop.invites.where(status: "accepted").includes(:campaign).each do |invite|
+        next if AffiliateOrder.cross_tenant.where(invite_id: invite.id).exists?
+
+        order_count = rand(2..15)
+        commission_rate = invite.campaign.commission_rate || 0.15
+
+        order_count.times do
+          gmv_cents = rand(1500..6000)
+          commission_cents = (gmv_cents * commission_rate).round
+          status = [ %w[confirmed confirmed confirmed], %w[settled settled], %w[pending], %w[cancelled] ].sample.sample
+
+          AffiliateOrder.create!(
+            shop: shop,
+            creator: invite.creator,
+            invite: invite,
+            campaign: invite.campaign,
+            product: invite.campaign.product,
+            external_id: "o_#{invite.id}_#{SecureRandom.hex(5)}",
+            order_status: status,
+            gmv_cents: gmv_cents,
+            commission_cents: commission_cents,
+            currency: "USD",
+            ordered_at: rand(1..28).days.ago
+          )
+          created_orders += 1
+        end
+      end
+
       puts "campaigns: created=#{created_campaigns}, total=#{shop.campaigns.count}"
       puts "invites:   created=#{created_invites}, total=#{shop.invites.count}"
       puts "samples:   created=#{created_samples}, total=#{shop.samples.count}"
+      puts "videos:    created=#{created_videos}, total=#{shop.creator_videos.count}"
+      puts "orders:    created=#{created_orders}, total=#{shop.affiliate_orders.count}"
       puts "invite status breakdown: #{shop.invites.group(:status).count}"
       puts "sample status breakdown: #{shop.samples.group(:status).count}"
+      puts "total attributed GMV: $#{(shop.affiliate_orders.sum(:gmv_cents) / 100.0).round}"
     ensure
       Current.reset
     end
