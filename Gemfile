@@ -21,7 +21,7 @@ gem "tailwindcss-rails"
 gem "bcrypt", "~> 3.1.7"
 
 # HTTP client for the TikTok Shop Partner API
-gem "faraday", "~> 2.9"
+gem "faraday", "~> 2.14"
 gem "faraday-retry", "~> 2.2"
 
 # Standard library that's leaving the default gems in Ruby 3.4
